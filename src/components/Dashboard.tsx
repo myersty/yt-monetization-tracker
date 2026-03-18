@@ -6,7 +6,7 @@ import { calculateProjections, generateProjectionPoints, detectOutliers } from '
 import ProgressRings from './ProgressRings';
 import TimelineChart from './TimelineChart';
 import CountdownCard from './CountdownCard';
-import VelocitySparkline from './VelocitySparkline';
+import VelocityCard from './VelocitySparkline';
 import MilestoneMarkers from './MilestoneMarkers';
 import WhatIfSimulator from './WhatIfSimulator';
 import ContentMetrics from './ContentMetrics';
@@ -100,39 +100,23 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
         </div>
 
         {/* Countdown + Velocity Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-1 animate-fade-in-up-delay-1">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="animate-fade-in-up-delay-1">
             <CountdownCard
               projections={projections}
               currentSubscribers={data.totals.currentSubscribers}
               totalWatchHours={data.totals.totalWatchTimeHours}
             />
           </div>
-          <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fade-in-up-delay-2">
-            {hasSubData && (
-              <VelocitySparkline
-                daily={data.daily}
-                metric="subscribers"
-                label="Subs / Day"
-                unit="avg"
-              />
-            )}
-            {hasWatchData && (
-              <VelocitySparkline
-                daily={data.daily}
-                metric="watchtime"
-                label="Hours / Day"
-                unit="avg"
-              />
-            )}
-            {hasViewData && (
-              <VelocitySparkline
-                daily={data.daily}
-                metric="views"
-                label="Views / Day"
-                unit="avg"
-              />
-            )}
+          <div className="animate-fade-in-up-delay-2">
+            <VelocityCard
+              daily={data.daily}
+              availableMetrics={[
+                ...(hasSubData ? ['subscribers' as const] : []),
+                ...(hasWatchData ? ['watchtime' as const] : []),
+                ...(hasViewData ? ['views' as const] : []),
+              ]}
+            />
           </div>
         </div>
 

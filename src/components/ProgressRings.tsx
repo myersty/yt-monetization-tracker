@@ -103,12 +103,12 @@ export default function ProgressRings({
             Subscribers
           </p>
         </div>
-        <p className="font-[family-name:var(--font-display)] font-bold text-3xl sm:text-4xl text-[var(--foreground)]">
-          {currentSubscribers.toLocaleString()}
-        </p>
-        <p className="text-sm text-[var(--gray-500)] mt-0.5">
-          / {subscriberGoal.toLocaleString()}
-        </p>
+        <div className="flex items-baseline gap-1 whitespace-nowrap">
+          <span className="font-[family-name:var(--font-display)] font-bold text-3xl sm:text-4xl text-[var(--foreground)]">
+            {currentSubscribers.toLocaleString()}
+          </span>
+          <span className="text-sm text-[var(--gray-500)]">/ {subscriberGoal.toLocaleString()}</span>
+        </div>
       </div>
 
       {/* Center — Rings */}
@@ -155,12 +155,12 @@ export default function ProgressRings({
             Watch Hours
           </p>
         </div>
-        <p className="font-[family-name:var(--font-display)] font-bold text-3xl sm:text-4xl text-[var(--foreground)]">
-          {Math.round(totalWatchHours).toLocaleString()}
-        </p>
-        <p className="text-sm text-[var(--gray-500)] mt-0.5">
-          / {watchHoursGoal.toLocaleString()}
-        </p>
+        <div className="flex items-baseline gap-1 whitespace-nowrap">
+          <span className="font-[family-name:var(--font-display)] font-bold text-3xl sm:text-4xl text-[var(--foreground)]">
+            {Math.round(totalWatchHours).toLocaleString()}
+          </span>
+          <span className="text-sm text-[var(--gray-500)]">/ {watchHoursGoal.toLocaleString()}</span>
+        </div>
       </div>
     </div>
   );
