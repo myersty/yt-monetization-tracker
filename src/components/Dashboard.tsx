@@ -202,13 +202,13 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
           </div>
         )}
 
-        {/* Raw Stats */}
+        {/* Channel Overview */}
         <div className="rounded-[var(--card-radius)] border border-[var(--gray-200)] bg-[var(--background)] p-6 shadow-[var(--card-shadow)]">
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--gray-600)] mb-4">
-            Data Summary
+            Channel Overview
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <StatBlock label="Date Range" value={`${data.daily.length} days`} />
+            <StatBlock label="Tracking Period" value={`${data.daily.length} days`} />
             <StatBlock label="Total Views" value={data.totals.totalViews.toLocaleString()} />
             <StatBlock label="Subscribers" value={data.totals.currentSubscribers.toLocaleString()} />
             <StatBlock
@@ -219,21 +219,18 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
           {shortsBreakdown && (
             <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-4">
               <StatBlock label="Shorts Watch Hours" value={Math.round(shortsBreakdown.shortsWatchTimeHours).toLocaleString()} />
-              <StatBlock label="Total Watch Hours" value={Math.round(shortsBreakdown.totalWatchTimeHours).toLocaleString()} />
+              <StatBlock label="Total Watch Hours (All)" value={Math.round(shortsBreakdown.totalWatchTimeHours).toLocaleString()} />
             </div>
           )}
-          <div className="mt-4 pt-4 border-t border-[var(--gray-200)]">
-            <p className="text-xs text-[var(--gray-500)]">
-              Files detected: {data.filesDetected.join(', ') || 'auto-detected'}
-            </p>
-          </div>
         </div>
       </div>
 
       {/* Footer */}
       <footer className="py-6 px-6 border-t border-[var(--gray-200)] text-center mt-8">
         <p className="text-xs text-[var(--gray-500)]">
-          Built by Ty Myers Media LLC &middot; Your data never leaves your browser
+          Built by Ty Myers Media LLC
+          {!isOAuthDashboard && <> &middot; Your data never leaves your browser</>}
+          {isOAuthDashboard && <> &middot; Connected securely via YouTube</>}
         </p>
       </footer>
     </div>

@@ -64,13 +64,13 @@ export default function VelocitySparkline({ daily, metric, label, unit }: Veloci
         <span className="text-[var(--gray-500)] text-sm font-normal ml-1">{unit}</span>
       </p>
 
-      <div className="h-12">
+      <div className="h-16 mt-1">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data}>
+          <AreaChart data={data} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
             <defs>
               <linearGradient id={`sparkGrad-${metric}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={trendColor} stopOpacity={0.2} />
-                <stop offset="95%" stopColor={trendColor} stopOpacity={0} />
+                <stop offset="5%" stopColor={trendColor} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={trendColor} stopOpacity={0.05} />
               </linearGradient>
             </defs>
             <Area
@@ -78,8 +78,9 @@ export default function VelocitySparkline({ daily, metric, label, unit }: Veloci
               dataKey="value"
               stroke={trendColor}
               fill={`url(#sparkGrad-${metric})`}
-              strokeWidth={1.5}
+              strokeWidth={2}
               dot={false}
+              baseValue="dataMin"
             />
           </AreaChart>
         </ResponsiveContainer>

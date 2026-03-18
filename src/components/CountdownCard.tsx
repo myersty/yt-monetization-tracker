@@ -32,6 +32,16 @@ function getStageEmoji(progressPercent: number): { emoji: string; size: string }
   return { emoji: '🌱', size: 'text-2xl' };
 }
 
+function getMotivationalMessage(progressPercent: number, daysRemaining: number | null): string {
+  if (progressPercent >= 100) return '';
+  if (progressPercent >= 75) return 'You\'re in the home stretch. Keep pushing!';
+  if (progressPercent >= 50) return 'Halfway there! Consistency is everything now.';
+  if (daysRemaining !== null && daysRemaining < 180) return 'You\'re making real progress. Stay consistent and you\'ll get there.';
+  if (progressPercent >= 25) return 'Great momentum building. Focus on content that drives watch time.';
+  if (progressPercent >= 10) return 'You\'re off to a solid start. Post consistently and engage your audience.';
+  return 'Every creator starts here. Focus on finding your niche and posting regularly.';
+}
+
 export default function CountdownCard({ projections, currentSubscribers = 0, totalWatchHours = 0 }: CountdownCardProps) {
   const current = projections.find(p => p.model === 'current');
   const conservative = projections.find(p => p.model === 'conservative');
@@ -87,6 +97,9 @@ export default function CountdownCard({ projections, currentSubscribers = 0, tot
             )}
             <p className="text-[var(--gray-500)] text-xs mt-1">
               At your current pace
+            </p>
+            <p className="text-[var(--gray-500)] text-xs mt-3 italic max-w-[280px] mx-auto">
+              {getMotivationalMessage(overallProgress, primaryDays)}
             </p>
           </div>
 

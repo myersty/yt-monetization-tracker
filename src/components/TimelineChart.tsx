@@ -425,12 +425,13 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                 y={goal}
                 stroke="var(--gold)"
                 strokeDasharray="8 4"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 label={{
-                  value: goalLabel,
-                  position: 'right',
-                  fontSize: 11,
+                  value: `🎯 ${goalLabel}`,
+                  position: 'insideTopRight',
+                  fontSize: 12,
                   fill: 'var(--gold)',
+                  fontWeight: 600,
                 }}
               />
 
