@@ -18,7 +18,7 @@ import { DailyMetrics, ParsedData, CSVFileType } from './types';
 // We handle ALL of these formats.
 
 type RawRow = Record<string, string>;
-type ExtendedCSVFileType = CSVFileType | 'content_table' | 'content_chart';
+type ExtendedCSVFileType = CSVFileType | 'content_table' | 'content_chart' | 'date_breakdown';
 
 // ─── Detection ──────────────────────────────────────────────────────────
 
@@ -45,13 +45,25 @@ function detectFileType(headers: string[], rows: RawRow[]): ExtendedCSVFileType 
 
   // Simple daily CSVs (Overview tab exports or Totals.csv)
   if (hasDate) {
-    if (normalized.some(h => h.includes('watch time') || h.includes('watch hours'))) {
+    const hasWatchTime = normalized.some(h => h.includes('watch time') || h.includes('watch hours'));
+    const hasSubs = normalized.some(h => h === 'subscribers');
+    const hasViews = normalized.some(h => h === 'views');
+
+    // Date breakdown "Table data.csv" — has Date + Subscribers + Views + Watch time all in one
+    if (hasWatchTime && hasSubs && hasViews) {
+      return 'date_breakdown';
+    }
+
+    if (hasWatchTime) {
       return 'watchtime';
     }
     if (normalized.some(h => h.includes('subscribers gained') || h.includes('subscribers lost'))) {
       return 'subscribers';
     }
-    if (normalized.some(h => h === 'views')) {
+    if (hasSubs) {
+      return 'subscribers';
+    }
+    if (hasViews) {
       return 'views';
     }
     // Only Date + one numeric column (like Totals.csv)
@@ -219,6 +231,43 @@ function parseContentChartCSV(rows: RawRow[], headers: string[]): Map<string, Pa
   return result;
 }
 
+// Date breakdown "Table data.csv": daily rows with Subscribers, Views, Watch time all in one
+function parseDateBreakdownCSV(rows: RawRow[], headers: string[]): {
+  data: Map<string, Partial<DailyMetrics>>;
+  aggregates?: { totalWatchHours: number; totalSubscribers: number; totalViews: number };
+} {
+  const result = new Map<string, Partial<DailyMetrics>>();
+  const dateKey = headers.find(h => h.toLowerCase().includes('date')) || headers[0];
+  let aggregates: { totalWatchHours: number; totalSubscribers: number; totalViews: number } | undefined;
+
+  for (const row of rows) {
+    const rawDate = row[dateKey];
+    if (!rawDate) continue;
+
+    // Skip the "Total" row but extract aggregates from it
+    if (rawDate === 'Total') {
+      aggregates = {
+        totalSubscribers: parseNumber(getColumnValue(row, headers, 'subscribers')),
+        totalViews: parseNumber(getColumnValue(row, headers, 'views')),
+        totalWatchHours: parseNumber(getColumnValue(row, headers, 'watch time')),
+      };
+      continue;
+    }
+
+    const date = normalizeDate(rawDate);
+    if (date.length < 8) continue;
+
+    result.set(date, {
+      date,
+      subscribersGained: parseNumber(getColumnValue(row, headers, 'subscribers')),
+      views: parseNumber(getColumnValue(row, headers, 'views')),
+      watchTimeHours: parseNumber(getColumnValue(row, headers, 'watch time')),
+    });
+  }
+
+  return { data: result, aggregates };
+}
+
 // ─── Main Parse Function ────────────────────────────────────────────────
 
 type ParseResult = {
@@ -248,6 +297,11 @@ export function parseCSVFile(file: File): Promise<ParseResult> {
         const fileType = detectFileType(headers, parsed.data);
 
         switch (fileType) {
+          case 'date_breakdown': {
+            const { data: dbData, aggregates: dbAgg } = parseDateBreakdownCSV(parsed.data, headers);
+            resolve({ type: fileType, data: dbData, aggregates: dbAgg });
+            return;
+          }
           case 'content_table': {
             const { data, aggregates } = parseContentTableCSV(parsed.data, headers);
             resolve({ type: fileType, data, aggregates });
@@ -290,7 +344,7 @@ export async function parseAllCSVs(files: File[]): Promise<ParsedData> {
 
   for (const result of results) {
     const simpleType: CSVFileType =
-      result.type === 'content_table' || result.type === 'content_chart'
+      result.type === 'content_table' || result.type === 'content_chart' || result.type === 'date_breakdown'
         ? 'views'
         : result.type;
     filesDetected.push(simpleType);

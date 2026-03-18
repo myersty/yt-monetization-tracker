@@ -84,13 +84,14 @@ export default function Home() {
             <h2 className="font-[family-name:var(--font-display)] font-bold text-lg text-center mb-6">
               How to Export Your Data
             </h2>
-            <div className="grid gap-4 max-w-md mx-auto">
+            <div className="grid gap-4 max-w-lg mx-auto">
               {[
-                { step: '1', text: 'Go to YouTube Studio \u2192 Analytics' },
-                { step: '2', text: 'Click "Advanced Mode" (top right)' },
-                { step: '3', text: 'Select your date range (longer is better)' },
-                { step: '4', text: 'Click the download icon \u2192 Export as CSV' },
-                { step: '5', text: 'Upload all exported files here' },
+                { step: '1', text: 'Go to YouTube Studio \u2192 Analytics \u2192 click "Advanced Mode" (top right)' },
+                { step: '2', text: 'Set Breakdown to "Date" (click the dropdown, search for "Date")' },
+                { step: '3', text: 'Click Metrics \u2192 check Views, Watch time (hours), and Subscribers \u2192 Apply' },
+                { step: '4', text: 'Set the date range to "Last 365 days"' },
+                { step: '5', text: 'Click the download icon \u2192 Comma-separated values (.csv)' },
+                { step: '6', text: 'Unzip and upload the "Table data.csv" file here' },
               ].map(({ step, text }) => (
                 <div key={step} className="flex items-center gap-4">
                   <span className="w-8 h-8 rounded-full bg-[var(--foreground)] text-[var(--background)] flex items-center justify-center text-sm font-bold font-[family-name:var(--font-display)] flex-shrink-0">
@@ -101,7 +102,7 @@ export default function Home() {
               ))}
             </div>
             <p className="text-center text-xs text-[var(--gray-500)] mt-6">
-              For best results, export from the Subscribers, Watch Time, and Views tabs separately.
+              Watch hours are measured on a rolling 365-day window. The &quot;Table data.csv&quot; file has everything we need.
             </p>
           </div>
         </div>
