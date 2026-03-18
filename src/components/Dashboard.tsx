@@ -47,7 +47,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
     <div className="min-h-screen bg-[var(--gray-50)]">
       {/* Header (hidden for OAuth dashboard since the channel header bar is shown instead) */}
       {!isOAuthDashboard && (
-        <header className="bg-[var(--foreground)] text-[var(--background)] py-4 px-6">
+        <header className="bg-[var(--gray-100)] border-b border-white/6 py-4 px-6">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <div>
               <h1 className="font-[family-name:var(--font-display)] font-bold text-lg">
@@ -167,7 +167,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
 
         {/* Outlier Alerts */}
         {outliers.length > 0 && (
-          <div className="mb-8 rounded-[var(--card-radius)] border border-[var(--gray-200)] bg-[var(--background)] p-6 shadow-[var(--card-shadow)]">
+          <div className="mb-8 rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)]">
             <p className="text-xs font-semibold uppercase tracking-wider text-[var(--gray-600)] mb-3">
               Viral Spike Detection
             </p>
@@ -194,7 +194,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
         )}
 
         {/* Channel Overview */}
-        <div className="rounded-[var(--card-radius)] border border-[var(--gray-200)] bg-[var(--background)] p-6 shadow-[var(--card-shadow)]">
+        <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)]">
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--gray-600)] mb-4">
             Channel Overview
           </p>

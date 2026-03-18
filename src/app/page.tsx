@@ -85,27 +85,29 @@ export default function Home() {
   return (
     <main className="min-h-screen flex flex-col">
       {/* Hero */}
-      <div className="bg-[var(--foreground)] text-[var(--background)] py-16 px-6">
-        <div className="max-w-2xl mx-auto text-center">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--gold)] mb-4">
-            YouTube Partner Program
-          </p>
-          <h1 className="font-[family-name:var(--font-display)] text-[clamp(28px,5vw,42px)] font-bold leading-tight mb-4">
-            How Close Are You to Monetization?
+      <div className="py-20 px-6 relative overflow-hidden">
+        {/* Subtle radial glow behind hero */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[var(--gold)] opacity-[0.03] rounded-full blur-[120px] pointer-events-none" />
+        <div className="max-w-2xl mx-auto text-center relative">
+          <span className="section-badge mb-6 inline-block">YouTube Partner Program</span>
+          <h1 className="font-[family-name:var(--font-display)] text-[clamp(32px,5vw,48px)] font-medium leading-tight mb-4">
+            How Close Are You to{' '}
+            <span className="text-gradient">Monetization</span>?
           </h1>
-          <p className="text-[var(--gray-400)] text-lg leading-relaxed max-w-lg mx-auto">
+          <p className="text-[var(--gray-500)] text-lg leading-relaxed max-w-lg mx-auto">
             Connect your YouTube channel or upload your analytics to see exactly
             where you stand on the path to 1,000 subscribers and 4,000 watch hours.
           </p>
         </div>
       </div>
+      <div className="section-divider" />
 
       {/* Options Section */}
       <div className="flex-1 bg-[var(--gray-50)] py-16 px-6">
         <div className="max-w-2xl mx-auto">
 
           {/* Option A: Connect with YouTube */}
-          <div className="rounded-[var(--card-radius)] border border-[var(--gray-200)] bg-[var(--background)] p-8 shadow-[var(--card-shadow)] mb-6">
+          <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-8 shadow-[var(--card-shadow)] mb-6">
             <div className="text-center mb-6">
               <div className="inline-flex items-center gap-2 mb-3">
                 <YouTubeIcon className="w-6 h-6 text-[#FF0000]" />
@@ -151,7 +153,7 @@ export default function Home() {
           </div>
 
           {/* Option B: Upload CSV */}
-          <div className="rounded-[var(--card-radius)] border border-[var(--gray-200)] bg-[var(--background)] p-8 shadow-[var(--card-shadow)]">
+          <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-8 shadow-[var(--card-shadow)]">
             <div className="text-center mb-6">
               <h2 className="font-[family-name:var(--font-display)] font-bold text-lg mb-2">
                 Upload CSV
@@ -208,7 +210,7 @@ export default function Home() {
                 { step: '6', text: 'Drop the downloaded .zip file here (no need to unzip!)' },
               ].map(({ step, text }) => (
                 <div key={step} className="flex items-center gap-4">
-                  <span className="w-8 h-8 rounded-full bg-[var(--foreground)] text-[var(--background)] flex items-center justify-center text-sm font-bold font-[family-name:var(--font-display)] flex-shrink-0">
+                  <span className="w-8 h-8 rounded-full bg-[var(--gold)]/10 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center text-sm font-bold font-[family-name:var(--font-display)] flex-shrink-0">
                     {step}
                   </span>
                   <p className="text-sm text-[var(--gray-700)]">{text}</p>

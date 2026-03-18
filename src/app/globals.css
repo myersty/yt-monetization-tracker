@@ -1,23 +1,37 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #1a1a1a;
-  --gold: #E8961E;
+  /* Pluggo-inspired dark theme with Ty Myers brand accents */
+  --background: #090909;
+  --foreground: #ededed;
+  --gold: #FF6B00;
   --gold-light: #FFC83B;
-  --gold-hover: #FF6B00;
-  --gray-50: #fafaf8;
-  --gray-100: #f5f5f3;
-  --gray-200: #e8e8e4;
-  --gray-300: #e0e0dc;
-  --gray-400: #ccc;
-  --gray-500: #999;
-  --gray-600: #888;
-  --gray-700: #666;
-  --card-shadow: 0 1px 3px rgba(0,0,0,0.04);
-  --card-radius: 12px;
+  --gold-hover: #FF8C33;
+  --gold-gradient: linear-gradient(135deg, #FFC83B 0%, #FF6B00 100%);
+
+  /* Dark grays (Pluggo palette) */
+  --gray-50: #111111;
+  --gray-100: #1a1a1a;
+  --gray-200: #2a2a2a;
+  --gray-300: #333333;
+  --gray-400: #555555;
+  --gray-500: #888888;
+  --gray-600: #aaaaaa;
+  --gray-700: #cccccc;
+
+  /* Cards */
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04);
+  --card-radius: 16px;
+  --card-border: 1px solid rgba(255,255,255,0.06);
+  --card-bg: rgba(26, 26, 26, 0.6);
+  --card-bg-solid: #1a1a1a;
+
+  /* Glow effects */
+  --glow-border: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,107,0,0.1) 50%, rgba(255,255,255,0.04) 100%);
+  --glow-subtle: 0 0 40px rgba(255, 107, 0, 0.04);
+
   --btn-radius: 44px;
-  --font-display: var(--font-manrope), sans-serif;
+  --font-display: var(--font-manrope), 'Inter', sans-serif;
 }
 
 @theme inline {
@@ -37,22 +51,6 @@
   --font-sans: var(--font-inter), sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --gray-50: #1a1a1a;
-    --gray-100: #222;
-    --gray-200: #333;
-    --gray-300: #444;
-    --gray-400: #666;
-    --gray-500: #888;
-    --gray-600: #aaa;
-    --gray-700: #ccc;
-    --card-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  }
-}
-
 * {
   box-sizing: border-box;
 }
@@ -65,6 +63,62 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   line-height: 1.2;
+  font-weight: 500;
+}
+
+/* Premium card style */
+.card-premium {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  border: var(--card-border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow), var(--glow-subtle);
+}
+
+/* Gradient border effect (Pluggo-style subtle glow) */
+.card-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--card-radius);
+  padding: 1px;
+  background: var(--glow-border);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Section divider line (Pluggo gradient line) */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(26,26,26,1) 0%, rgba(255,255,255,0.15) 50%, rgba(26,26,26,1) 100%);
+}
+
+/* Section label badge (Pluggo pill style) */
+.section-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 100px;
+  background: rgba(255, 107, 0, 0.08);
+  border: 1px solid rgba(255, 107, 0, 0.15);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gold-light);
+}
+
+/* Accent gradient text */
+.text-gradient {
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Progress ring animation */
@@ -76,7 +130,7 @@ h1, h2, h3, h4, h5, h6 {
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -115,8 +169,26 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Recharts tooltip override */
 .recharts-default-tooltip {
-  background: var(--background) !important;
+  background: var(--card-bg-solid) !important;
   border: 1px solid var(--gray-200) !important;
-  border-radius: 8px !important;
+  border-radius: 12px !important;
   box-shadow: var(--card-shadow) !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
 }

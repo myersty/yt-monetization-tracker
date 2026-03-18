@@ -57,7 +57,7 @@ export default function VelocityCard({ daily, availableMetrics }: VelocityCardPr
   };
 
   return (
-    <div className="rounded-[var(--card-radius)] border border-[var(--gray-200)] bg-[var(--background)] p-5 shadow-[var(--card-shadow)]">
+    <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-5 shadow-[var(--card-shadow)]">
       {/* Header with tabs */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex bg-[var(--gray-100)] rounded-full p-0.5">
