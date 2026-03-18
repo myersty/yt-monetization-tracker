@@ -187,7 +187,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <Dashboard data={parsedData} onReset={handleReset} />
+        <Dashboard data={parsedData} onReset={handleReset} isOAuthDashboard={true} />
       </div>
     );
   }

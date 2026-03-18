@@ -9,6 +9,7 @@ export type ChannelInfo = {
   subscriberCount: number;
   totalViews: number;
   channelThumbnail: string;
+  channelCreatedAt: string; // ISO date from snippet.publishedAt
 };
 
 export type DailyAnalyticsRow = {
@@ -50,6 +51,7 @@ export async function getChannelInfo(accessToken: string): Promise<ChannelInfo> 
     subscriberCount: parseInt(channel.statistics.subscriberCount || '0', 10),
     totalViews: parseInt(channel.statistics.viewCount || '0', 10),
     channelThumbnail: channel.snippet.thumbnails?.default?.url || '',
+    channelCreatedAt: channel.snippet.publishedAt || '2005-01-01T00:00:00Z',
   };
 }
 

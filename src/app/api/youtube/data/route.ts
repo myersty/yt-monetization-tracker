@@ -24,17 +24,20 @@ export async function GET() {
     const endDate = new Date();
     const endStr = formatDate(endDate);
 
-    // Lifetime start: as far back as the API allows
-    const lifetimeStartStr = '2005-01-01';
-
     // Last 365 days for watch time calculation
     const watchTimeStart = new Date();
     watchTimeStart.setDate(watchTimeStart.getDate() - 365);
     const watchTimeStartStr = formatDate(watchTimeStart);
 
-    // Fetch channel info, lifetime analytics, and shorts breakdown in parallel
-    const [channelInfo, lifetimeRows, shortsData] = await Promise.all([
-      getChannelInfo(accessToken),
+    // Fetch channel info first to get the channel creation date
+    const channelInfo = await getChannelInfo(accessToken);
+
+    // Use channel creation date as the lifetime start instead of hardcoded 2005-01-01
+    const channelCreatedDate = new Date(channelInfo.channelCreatedAt);
+    const lifetimeStartStr = formatDate(channelCreatedDate);
+
+    // Fetch lifetime analytics and shorts breakdown in parallel
+    const [lifetimeRows, shortsData] = await Promise.all([
       getDailyAnalytics(accessToken, lifetimeStartStr, endStr),
       getWatchTimeByContentType(accessToken, watchTimeStartStr, endStr).catch(() => null),
     ]);
@@ -42,9 +45,20 @@ export async function GET() {
     // Fetch recent video count for posting cadence
     const recentVideos = await getRecentVideoCount(accessToken, channelInfo.channelId, 90).catch(() => null);
 
+    // Filter out leading days with zero activity (before channel had any real data)
+    let firstActiveIndex = 0;
+    for (let i = 0; i < lifetimeRows.length; i++) {
+      const row = lifetimeRows[i];
+      if (row.subscribersGained > 0 || row.subscribersLost > 0 || row.watchTimeMinutes > 0 || row.views > 0) {
+        firstActiveIndex = i;
+        break;
+      }
+    }
+    const activeRows = lifetimeRows.slice(firstActiveIndex);
+
     // Convert YouTube Analytics data to DailyMetrics format (lifetime)
     let cumulativeSubscribers = 0;
-    const daily: DailyMetrics[] = lifetimeRows.map((row) => {
+    const daily: DailyMetrics[] = activeRows.map((row) => {
       const net = row.subscribersGained - row.subscribersLost;
       cumulativeSubscribers += net;
 

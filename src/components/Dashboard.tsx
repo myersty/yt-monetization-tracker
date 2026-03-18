@@ -14,9 +14,10 @@ import ContentMetrics from './ContentMetrics';
 type DashboardProps = {
   data: ParsedData;
   onReset: () => void;
+  isOAuthDashboard?: boolean;
 };
 
-export default function Dashboard({ data, onReset }: DashboardProps) {
+export default function Dashboard({ data, onReset, isOAuthDashboard = false }: DashboardProps) {
   const projections = useMemo(() => calculateProjections(data.daily), [data.daily]);
   const outliers = useMemo(() => detectOutliers(data.daily), [data.daily]);
   const chartData = useMemo(
@@ -38,25 +39,27 @@ export default function Dashboard({ data, onReset }: DashboardProps) {
 
   return (
     <div className="min-h-screen bg-[var(--gray-50)]">
-      {/* Header */}
-      <header className="bg-[var(--foreground)] text-[var(--background)] py-4 px-6">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="font-[family-name:var(--font-display)] font-bold text-lg">
-              Monetization Tracker
-            </h1>
-            <p className="text-xs text-[var(--gray-500)]">
-              {data.dateRange.start} to {data.dateRange.end} &middot; {data.daily.length} days
-            </p>
+      {/* Header (hidden for OAuth dashboard since the channel header bar is shown instead) */}
+      {!isOAuthDashboard && (
+        <header className="bg-[var(--foreground)] text-[var(--background)] py-4 px-6">
+          <div className="max-w-6xl mx-auto flex items-center justify-between">
+            <div>
+              <h1 className="font-[family-name:var(--font-display)] font-bold text-lg">
+                Monetization Tracker
+              </h1>
+              <p className="text-xs text-[var(--gray-500)]">
+                {data.dateRange.start} to {data.dateRange.end} &middot; {data.daily.length} days
+              </p>
+            </div>
+            <button
+              onClick={onReset}
+              className="px-4 py-2 text-sm rounded-full border border-[var(--gray-400)] text-[var(--gray-400)] hover:text-[var(--background)] hover:border-[var(--background)] transition-colors"
+            >
+              Upload New Data
+            </button>
           </div>
-          <button
-            onClick={onReset}
-            className="px-4 py-2 text-sm rounded-full border border-[var(--gray-400)] text-[var(--gray-400)] hover:text-[var(--background)] hover:border-[var(--background)] transition-colors"
-          >
-            Upload New Data
-          </button>
-        </div>
-      </header>
+        </header>
+      )}
 
       <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Data availability notice */}
@@ -99,7 +102,11 @@ export default function Dashboard({ data, onReset }: DashboardProps) {
         {/* Countdown + Velocity Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-1 animate-fade-in-up-delay-1">
-            <CountdownCard projections={projections} />
+            <CountdownCard
+              projections={projections}
+              currentSubscribers={data.totals.currentSubscribers}
+              totalWatchHours={data.totals.totalWatchTimeHours}
+            />
           </div>
           <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fade-in-up-delay-2">
             {hasSubData && (
