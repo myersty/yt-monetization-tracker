@@ -190,7 +190,7 @@ export default function WhatIfSimulator({
                 year: 'numeric',
               })}
             </p>
-            <p className="text-[var(--gold)] font-semibold mt-1">
+            <p className="text-accent-gradient font-semibold mt-1">
               ~{projection.daysToMonetization} days
             </p>
             <div className="flex justify-center gap-6 mt-3 text-xs text-[var(--gray-500)]">

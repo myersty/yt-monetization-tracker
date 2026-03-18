@@ -214,10 +214,31 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
             </div>
           )}
         </div>
+
+        {/* CTA Banner */}
+        <div className="cta-banner mb-8">
+          <h2 className="text-heading-gradient font-[family-name:var(--font-display)] text-2xl sm:text-3xl font-medium mb-3">
+            Scale Your YouTube Channel Faster
+          </h2>
+          <p className="text-[var(--gray-500)] text-sm max-w-md mx-auto mb-6">
+            Get personalized coaching to grow past 1,000 subscribers and build real momentum on YouTube.
+          </p>
+          <a
+            href="https://momentum-builder.tymyersmedia.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-gradient inline-flex items-center gap-2 px-8 py-3 text-sm"
+          >
+            Learn More
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
+        </div>
       </div>
 
       {/* Footer */}
-      <footer className="py-6 px-6 border-t border-[var(--gray-200)] text-center mt-8">
+      <footer className="py-6 px-6 border-t border-white/6 text-center mt-8">
         <p className="text-xs text-[var(--gray-500)]">
           Built by Ty Myers Media LLC
           {!isOAuthDashboard && <> &middot; Your data never leaves your browser</>}

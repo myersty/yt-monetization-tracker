@@ -61,7 +61,7 @@ export default function CountdownCard({ projections, currentSubscribers = 0, tot
   const stage = getStageEmoji(alreadyMonetizable ? 100 : overallProgress);
 
   return (
-    <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)]">
+    <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)] card-pattern">
       <p className="text-xs font-semibold uppercase tracking-wider text-[var(--gray-600)] mb-3">
         Estimated Monetization Date
       </p>
@@ -91,7 +91,7 @@ export default function CountdownCard({ projections, currentSubscribers = 0, tot
               {formatDate(primaryDate || null)}
             </p>
             {primaryDays !== null && primaryDays > 0 && (
-              <p className="text-[var(--gold)] font-semibold text-lg mt-1">
+              <p className="text-accent-gradient font-semibold text-lg mt-1">
                 {primaryDays} days away
               </p>
             )}
@@ -143,7 +143,7 @@ function ProjectionEstimate({
 
   return (
     <div className={`text-center ${active ? 'opacity-100' : 'opacity-70'}`}>
-      <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color }}>
+      <p className={`text-[10px] font-semibold uppercase tracking-wider mb-1 ${active ? 'text-accent-gradient' : ''}`} style={active ? undefined : { color }}>
         {label}
       </p>
       <p className={`text-sm font-bold font-[family-name:var(--font-display)] ${active ? 'text-[var(--foreground)]' : 'text-[var(--gray-700)]'}`}>

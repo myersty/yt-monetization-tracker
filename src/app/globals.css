@@ -21,7 +21,7 @@
 
   /* Cards */
   --card-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04);
-  --card-radius: 16px;
+  --card-radius: 24px;
   --card-border: 1px solid rgba(255,255,255,0.06);
   --card-bg: rgba(26, 26, 26, 0.6);
   --card-bg-solid: #1a1a1a;
@@ -62,8 +62,19 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  line-height: 1.2;
+  line-height: 1.1;
   font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: clamp(36px, 5vw, 64px);
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: clamp(28px, 4vw, 52px);
+  letter-spacing: -0.02em;
 }
 
 /* Premium card style */
@@ -113,12 +124,109 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--gold-light);
 }
 
-/* Accent gradient text */
+/* Accent gradient text (yellow-orange brand gradient) */
 .text-gradient {
   background: var(--gold-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Heading gradient (white to warm orange — Pluggo-inspired) */
+.text-heading-gradient {
+  background: linear-gradient(90deg, #ffffff 30%, #FFB574);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Accent value text (for numbers like "196 days away") */
+.text-accent-gradient {
+  background: linear-gradient(135deg, #FFC83B, #FF6B00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Gradient button */
+.btn-gradient {
+  background: linear-gradient(135deg, #FFC83B 0%, #FF6B00 100%);
+  color: #000;
+  border: none;
+  border-radius: var(--btn-radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-gradient:hover {
+  box-shadow: 0 0 24px rgba(255, 107, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Concentric circle card background pattern */
+.card-pattern {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-pattern::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -30%);
+  width: 500px;
+  height: 500px;
+  background:
+    radial-gradient(circle, transparent 30%, rgba(255,255,255,0.02) 31%, rgba(255,255,255,0.02) 31.5%, transparent 32%),
+    radial-gradient(circle, transparent 45%, rgba(255,255,255,0.015) 46%, rgba(255,255,255,0.015) 46.5%, transparent 47%),
+    radial-gradient(circle, transparent 60%, rgba(255,255,255,0.01) 61%, rgba(255,255,255,0.01) 61.5%, transparent 62%),
+    radial-gradient(circle, transparent 75%, rgba(255,255,255,0.008) 76%, rgba(255,255,255,0.008) 76.5%, transparent 77%),
+    radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.06) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.card-pattern > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* CTA banner card */
+.cta-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--card-radius);
+  padding: 60px 40px;
+  text-align: center;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.08) 0%, transparent 50%),
+    linear-gradient(180deg, #1a1a1a 0%, #111111 100%);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.cta-banner::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 30%, rgba(255,200,59,0.15) 50%, rgba(255,255,255,0.1) 70%, transparent 100%);
+}
+
+.cta-banner::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,200,59,0.3), transparent);
 }
 
 /* Progress ring animation */

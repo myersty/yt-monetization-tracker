@@ -125,7 +125,7 @@ export default function Home() {
 
             <a
               href="/api/auth/login"
-              className="flex items-center justify-center gap-3 w-full max-w-sm mx-auto px-6 py-3.5 rounded-full bg-[var(--gold)] text-white font-semibold text-base transition-all duration-200 hover:bg-[var(--gold-hover)] hover:shadow-lg hover:shadow-[var(--gold)]/20 active:scale-[0.98]"
+              className="btn-gradient flex items-center justify-center gap-3 w-full max-w-sm mx-auto px-6 py-3.5 text-base active:scale-[0.98]"
             >
               <YouTubeIcon className="w-5 h-5" />
               Connect Your YouTube Channel
