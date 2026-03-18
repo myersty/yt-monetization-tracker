@@ -7,6 +7,7 @@ type WhatIfSimulatorProps = {
   totalWatchHours: number;
   currentSubsPerDay: number;
   currentHoursPerDay: number;
+  postingCadenceDays?: number;
 };
 
 export default function WhatIfSimulator({
@@ -14,12 +15,17 @@ export default function WhatIfSimulator({
   totalWatchHours,
   currentSubsPerDay,
   currentHoursPerDay,
+  postingCadenceDays,
 }: WhatIfSimulatorProps) {
-  const [videosPerWeek, setVideosPerWeek] = useState(2);
+  const actualCadence = postingCadenceDays ?? 7;
+  const [daysBetweenPosts, setDaysBetweenPosts] = useState(Math.round(actualCadence));
   const [avgVideoMinutes, setAvgVideoMinutes] = useState(10);
   const [avgViewsPerVideo, setAvgViewsPerVideo] = useState(500);
 
   const projection = useMemo(() => {
+    // Convert days between posts to videos per week
+    const videosPerWeek = 7 / daysBetweenPosts;
+
     // Rough estimates:
     // Average view duration ~ 40% of video length for good content
     const avgWatchMinutesPerView = avgVideoMinutes * 0.4;
@@ -55,7 +61,7 @@ export default function WhatIfSimulator({
       weeklyWatchHours,
       weeklyNewSubs,
     };
-  }, [videosPerWeek, avgVideoMinutes, avgViewsPerVideo, currentSubscribers, totalWatchHours]);
+  }, [daysBetweenPosts, avgVideoMinutes, avgViewsPerVideo, currentSubscribers, totalWatchHours]);
 
   return (
     <div className="rounded-[var(--card-radius)] border border-[var(--gray-200)] bg-[var(--background)] p-6 shadow-[var(--card-shadow)]">
@@ -67,26 +73,33 @@ export default function WhatIfSimulator({
       </p>
 
       <div className="space-y-5">
-        {/* Videos per week */}
+        {/* Days between posts */}
         <div>
           <div className="flex justify-between mb-1">
-            <label className="text-sm font-medium">Videos per week</label>
+            <label className="text-sm font-medium">
+              What if you posted every {daysBetweenPosts} day{daysBetweenPosts !== 1 ? 's' : ''}?
+            </label>
             <span className="text-sm font-bold font-[family-name:var(--font-display)] text-[var(--gold)]">
-              {videosPerWeek}
+              {daysBetweenPosts}d
             </span>
           </div>
           <input
             type="range"
             min={1}
-            max={7}
-            value={videosPerWeek}
-            onChange={e => setVideosPerWeek(Number(e.target.value))}
+            max={30}
+            value={daysBetweenPosts}
+            onChange={e => setDaysBetweenPosts(Number(e.target.value))}
             className="w-full accent-[var(--gold)]"
           />
           <div className="flex justify-between text-[10px] text-[var(--gray-500)]">
-            <span>1</span>
-            <span>7</span>
+            <span>1 day</span>
+            <span>30 days</span>
           </div>
+          {postingCadenceDays !== undefined && (
+            <p className="text-[10px] text-[var(--gray-500)] mt-1">
+              You currently post every {postingCadenceDays.toFixed(1)} days
+            </p>
+          )}
         </div>
 
         {/* Avg video length */}

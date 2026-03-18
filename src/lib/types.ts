@@ -32,6 +32,10 @@ export type ParsedData = {
   /** Channel info passed through from the API */
   channelName?: string;
   channelThumbnail?: string;
+  /** Number of videos posted in the last 90 days (API only) */
+  videosLast90Days?: number;
+  /** Average days between posts based on last 90 days (API only) */
+  postingCadenceDays?: number;
 };
 
 export type CSVFileType = 'subscribers' | 'watchtime' | 'views' | 'unknown';

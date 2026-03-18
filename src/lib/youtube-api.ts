@@ -4,6 +4,7 @@ const YT_DATA_API = 'https://www.googleapis.com/youtube/v3';
 const YT_ANALYTICS_API = 'https://youtubeanalytics.googleapis.com/v2';
 
 export type ChannelInfo = {
+  channelId: string;
   channelName: string;
   subscriberCount: number;
   totalViews: number;
@@ -44,6 +45,7 @@ export async function getChannelInfo(accessToken: string): Promise<ChannelInfo> 
   }
 
   return {
+    channelId: channel.id,
     channelName: channel.snippet.title,
     subscriberCount: parseInt(channel.statistics.subscriberCount || '0', 10),
     totalViews: parseInt(channel.statistics.viewCount || '0', 10),
@@ -145,4 +147,41 @@ export async function getWatchTimeByContentType(
     shorts: shortsMinutes / 60,
     total: (longFormMinutes + shortsMinutes) / 60,
   };
+}
+
+/**
+ * Fetch the number of videos published in the last N days using YouTube Data API v3 search.list.
+ */
+export async function getRecentVideoCount(
+  accessToken: string,
+  channelId: string,
+  daysBack: number
+): Promise<{ totalVideos: number; daysBack: number }> {
+  const now = new Date();
+  const past = new Date();
+  past.setDate(past.getDate() - daysBack);
+
+  const url = new URL(`${YT_DATA_API}/search`);
+  url.searchParams.set('part', 'id');
+  url.searchParams.set('channelId', channelId);
+  url.searchParams.set('type', 'video');
+  url.searchParams.set('publishedAfter', past.toISOString());
+  url.searchParams.set('publishedBefore', now.toISOString());
+  url.searchParams.set('maxResults', '1');
+
+  const response = await fetch(url.toString(), {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(
+      `YouTube Data API search error (${response.status}): ${error?.error?.message || response.statusText}`
+    );
+  }
+
+  const data = await response.json();
+  const totalVideos = data.pageInfo?.totalResults ?? 0;
+
+  return { totalVideos, daysBack };
 }

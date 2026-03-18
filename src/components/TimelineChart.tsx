@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react';
 import {
   AreaChart,
   Area,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -11,14 +13,22 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from 'recharts';
-import { ProjectionPoint } from '@/lib/types';
+import { ProjectionPoint, DailyMetrics } from '@/lib/types';
+
+type WeeksToGoalPoint = {
+  date: string;
+  weeksToSubGoal: number | null;
+  weeksToHoursGoal: number | null;
+};
 
 type TimelineChartProps = {
   data: ProjectionPoint[];
+  daily: DailyMetrics[];
   lastHistoricalDate: string;
+  currentSubscribers: number;
 };
 
-type MetricView = 'subscribers' | 'watchtime';
+type MetricView = 'subscribers' | 'watchtime' | 'weekstogoal';
 type TimeRange = '1M' | '3M' | '6M' | '1Y' | 'All';
 
 const TIME_RANGES: { key: TimeRange; label: string; days: number | null }[] = [
@@ -29,7 +39,7 @@ const TIME_RANGES: { key: TimeRange; label: string; days: number | null }[] = [
   { key: 'All', label: 'All', days: null },
 ];
 
-export default function TimelineChart({ data, lastHistoricalDate }: TimelineChartProps) {
+export default function TimelineChart({ data, daily, lastHistoricalDate, currentSubscribers }: TimelineChartProps) {
   const [view, setView] = useState<MetricView>('subscribers');
   const [timeRange, setTimeRange] = useState<TimeRange>('All');
 
@@ -60,6 +70,102 @@ export default function TimelineChart({ data, lastHistoricalDate }: TimelineChar
 
     return historicalInRange;
   }, [data, timeRange, lastHistoricalDate]);
+
+  // Check if already monetization-eligible
+  const lastDaySubs = daily.length > 0 ? (daily[daily.length - 1].subscribers ?? currentSubscribers) : currentSubscribers;
+  const last365WatchHours = useMemo(() => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 365);
+    const cutoffStr = cutoff.toISOString().split('T')[0];
+    return daily
+      .filter(d => d.date >= cutoffStr)
+      .reduce((sum, d) => sum + (d.watchTimeHours || 0), 0);
+  }, [daily]);
+  const alreadyEligible = lastDaySubs >= 1000 && last365WatchHours >= 4000;
+
+  // Compute "Weeks to Goal" data from daily metrics, aggregated weekly
+  const weeksToGoalData = useMemo((): WeeksToGoalPoint[] => {
+    if (daily.length < 7) return [];
+
+    const points: WeeksToGoalPoint[] = [];
+    // Aggregate daily data into weekly buckets
+    const weekSize = 7;
+    const numWeeks = Math.floor(daily.length / weekSize);
+
+    for (let w = 0; w < numWeeks; w++) {
+      const weekEnd = (w + 1) * weekSize - 1;
+      const weekDate = daily[weekEnd].date;
+      const currentSubs = daily[weekEnd].subscribers ?? 0;
+
+      // Cumulative watch hours for the last 365 days up to this point
+      const dayIndex = weekEnd;
+      const lookbackStart = Math.max(0, dayIndex - 364);
+      let cumWatchHours = 0;
+      for (let d = lookbackStart; d <= dayIndex; d++) {
+        cumWatchHours += daily[d].watchTimeHours || 0;
+      }
+
+      // Rolling 4-week average for subscriber gain
+      const lookbackWeeks = Math.min(4, w + 1);
+      let totalSubGain = 0;
+      let totalHoursGain = 0;
+      for (let lw = 0; lw < lookbackWeeks; lw++) {
+        const prevWeekEnd = (w - lw) * weekSize - 1;
+        const curWeekEnd = (w - lw + 1) * weekSize - 1;
+        if (prevWeekEnd < 0) {
+          // First week: use the full week's gain
+          const startSubs = daily[0].subscribers ?? 0;
+          totalSubGain += (daily[curWeekEnd].subscribers ?? 0) - startSubs;
+          // Watch hours for that week
+          for (let d = 0; d <= curWeekEnd; d++) {
+            totalHoursGain += daily[d].watchTimeHours || 0;
+          }
+        } else {
+          totalSubGain += (daily[curWeekEnd].subscribers ?? 0) - (daily[prevWeekEnd].subscribers ?? 0);
+          for (let d = prevWeekEnd + 1; d <= curWeekEnd; d++) {
+            totalHoursGain += daily[d].watchTimeHours || 0;
+          }
+        }
+      }
+      const avgWeeklySubGain = totalSubGain / lookbackWeeks;
+      const avgWeeklyHoursGain = totalHoursGain / lookbackWeeks;
+
+      const remainingSubs = Math.max(0, 1000 - currentSubs);
+      const remainingHours = Math.max(0, 4000 - cumWatchHours);
+
+      const weeksToSubGoal = remainingSubs === 0
+        ? 0
+        : avgWeeklySubGain > 0
+          ? Math.min(500, remainingSubs / avgWeeklySubGain)
+          : 500;
+
+      const weeksToHoursGoal = remainingHours === 0
+        ? 0
+        : avgWeeklyHoursGain > 0
+          ? Math.min(500, remainingHours / avgWeeklyHoursGain)
+          : 500;
+
+      points.push({
+        date: weekDate,
+        weeksToSubGoal,
+        weeksToHoursGoal,
+      });
+    }
+
+    return points;
+  }, [daily]);
+
+  // Filter weeks-to-goal data by time range
+  const filteredWeeksData = useMemo(() => {
+    const rangeDef = TIME_RANGES.find(r => r.key === timeRange);
+    if (!rangeDef || rangeDef.days === null) return weeksToGoalData;
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - rangeDef.days);
+    const cutoffStr = cutoffDate.toISOString().split('T')[0];
+
+    return weeksToGoalData.filter(d => d.date >= cutoffStr);
+  }, [weeksToGoalData, timeRange]);
 
   // Show projections only for 1Y and All
   const showProjections = timeRange === '1Y' || timeRange === 'All';
@@ -128,141 +234,244 @@ export default function TimelineChart({ data, lastHistoricalDate }: TimelineChar
             >
               Watch Hours
             </button>
+            <button
+              onClick={() => setView('weekstogoal')}
+              className={`
+                px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200
+                ${view === 'weekstogoal'
+                  ? 'bg-[var(--foreground)] text-[var(--background)]'
+                  : 'text-[var(--gray-600)] hover:text-[var(--foreground)]'
+                }
+              `}
+            >
+              Weeks to Goal
+            </button>
           </div>
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={350}>
-        <AreaChart data={filteredData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-          <defs>
-            <linearGradient id="gradientGold" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--gold)" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="var(--gold)" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="gradientBlue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#1565C0" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="#1565C0" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-200)" />
-          <XAxis
-            dataKey="date"
-            tickFormatter={formatDate}
-            tick={{ fontSize: 11, fill: 'var(--gray-600)' }}
-            interval="preserveStartEnd"
-            minTickGap={60}
-          />
-          <YAxis
-            tickFormatter={formatValue}
-            tick={{ fontSize: 11, fill: 'var(--gray-600)' }}
-            width={50}
-          />
-          <Tooltip
-            labelFormatter={(label) => new Date(label).toLocaleDateString('en-US', {
-              weekday: 'short',
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-            })}
-            formatter={(value, name) => {
-              const labels: Record<string, string> = {
-                subscribers: 'Subscribers',
-                watchTimeHours: 'Watch Hours',
-                conservative_subs: 'Conservative',
-                conservative_hours: 'Conservative',
-                current_subs: 'Current Pace',
-                current_hours: 'Current Pace',
-                optimistic_subs: 'Optimistic',
-                optimistic_hours: 'Optimistic',
-              };
-              const numVal = typeof value === 'number' ? value : Number(value) || 0;
-              const nameStr = String(name);
-              return [Math.round(numVal).toLocaleString(), labels[nameStr] || nameStr];
-            }}
-          />
-
-          {/* Goal line */}
-          <ReferenceLine
-            y={goal}
-            stroke="var(--gold)"
-            strokeDasharray="8 4"
-            strokeWidth={2}
-            label={{
-              value: goalLabel,
-              position: 'right',
-              fontSize: 11,
-              fill: 'var(--gold)',
-            }}
-          />
-
-          {/* Historical data */}
-          <Area
-            type="monotone"
-            dataKey={dataKey}
-            stroke={view === 'subscribers' ? 'var(--gold)' : '#1565C0'}
-            fill={view === 'subscribers' ? 'url(#gradientGold)' : 'url(#gradientBlue)'}
-            strokeWidth={2}
-            dot={false}
-            animationDuration={500}
-          />
-
-          {/* Projection lines (only for 1Y and All) */}
-          {showProjections && (
-            <>
-              <Area
-                type="monotone"
-                dataKey={view === 'subscribers' ? 'conservative_subs' : 'conservative_hours'}
-                stroke="var(--gray-400)"
-                fill="none"
-                strokeWidth={1.5}
-                strokeDasharray="6 3"
-                dot={false}
-                name={view === 'subscribers' ? 'conservative_subs' : 'conservative_hours'}
-                animationDuration={500}
+      {view === 'weekstogoal' ? (
+        alreadyEligible ? (
+          <div className="flex items-center justify-center h-[350px]">
+            <div className="text-center">
+              <p className="text-3xl mb-2">&#127881;</p>
+              <p className="text-xl font-bold font-[family-name:var(--font-display)] text-[#2E7D32]">
+                You&apos;ve already reached both goals!
+              </p>
+              <p className="text-sm text-[var(--gray-600)] mt-2">
+                1,000+ subscribers and 4,000+ watch hours achieved.
+              </p>
+            </div>
+          </div>
+        ) : filteredWeeksData.length === 0 ? (
+          <div className="flex items-center justify-center h-[350px]">
+            <p className="text-sm text-[var(--gray-500)]">Not enough data to calculate weeks to goal.</p>
+          </div>
+        ) : (
+          <>
+            <ResponsiveContainer width="100%" height={350}>
+              <LineChart data={filteredWeeksData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-200)" />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={formatDate}
+                  tick={{ fontSize: 11, fill: 'var(--gray-600)' }}
+                  interval="preserveStartEnd"
+                  minTickGap={60}
+                />
+                <YAxis
+                  tickFormatter={(val) => Math.round(val).toString()}
+                  tick={{ fontSize: 11, fill: 'var(--gray-600)' }}
+                  width={50}
+                  label={{ value: 'Weeks remaining', angle: -90, position: 'insideLeft', fontSize: 11, fill: 'var(--gray-500)' }}
+                />
+                <Tooltip
+                  labelFormatter={(label) => new Date(label).toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                  formatter={(value, name) => {
+                    const labels: Record<string, string> = {
+                      weeksToSubGoal: 'Weeks to 1K Subs',
+                      weeksToHoursGoal: 'Weeks to 4K Hours',
+                    };
+                    const numVal = typeof value === 'number' ? value : Number(value) || 0;
+                    const nameStr = String(name);
+                    return [Math.round(numVal).toLocaleString(), labels[nameStr] || nameStr];
+                  }}
+                />
+                <ReferenceLine y={0} stroke="var(--gray-400)" strokeWidth={1} />
+                <Line
+                  type="monotone"
+                  dataKey="weeksToSubGoal"
+                  stroke="var(--gold)"
+                  strokeWidth={2}
+                  dot={{ r: 2, fill: 'var(--gold)' }}
+                  name="weeksToSubGoal"
+                  animationDuration={500}
+                  connectNulls
+                />
+                <Line
+                  type="monotone"
+                  dataKey="weeksToHoursGoal"
+                  stroke="#1565C0"
+                  strokeWidth={2}
+                  dot={{ r: 2, fill: '#1565C0' }}
+                  name="weeksToHoursGoal"
+                  animationDuration={500}
+                  connectNulls
+                />
+              </LineChart>
+            </ResponsiveContainer>
+            <div className="flex justify-center gap-6 mt-4 text-xs text-[var(--gray-600)]">
+              <span className="flex items-center gap-1.5">
+                <span className="w-4 h-0 border-t-2" style={{ borderColor: 'var(--gold)' }} />
+                Weeks to 1,000 Subscribers
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-4 h-0 border-t-2 border-[#1565C0]" />
+                Weeks to 4,000 Watch Hours
+              </span>
+            </div>
+          </>
+        )
+      ) : (
+        <>
+          <ResponsiveContainer width="100%" height={350}>
+            <AreaChart data={filteredData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="gradientGold" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--gold)" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="var(--gold)" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="gradientBlue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#1565C0" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#1565C0" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-200)" />
+              <XAxis
+                dataKey="date"
+                tickFormatter={formatDate}
+                tick={{ fontSize: 11, fill: 'var(--gray-600)' }}
+                interval="preserveStartEnd"
+                minTickGap={60}
               />
-              <Area
-                type="monotone"
-                dataKey={view === 'subscribers' ? 'current_subs' : 'current_hours'}
-                stroke={view === 'subscribers' ? 'var(--gold)' : '#1565C0'}
-                fill="none"
+              <YAxis
+                tickFormatter={formatValue}
+                tick={{ fontSize: 11, fill: 'var(--gray-600)' }}
+                width={50}
+              />
+              <Tooltip
+                labelFormatter={(label) => new Date(label).toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+                formatter={(value, name) => {
+                  const labels: Record<string, string> = {
+                    subscribers: 'Subscribers',
+                    watchTimeHours: 'Watch Hours',
+                    conservative_subs: 'Conservative',
+                    conservative_hours: 'Conservative',
+                    current_subs: 'Current Pace',
+                    current_hours: 'Current Pace',
+                    optimistic_subs: 'Optimistic',
+                    optimistic_hours: 'Optimistic',
+                  };
+                  const numVal = typeof value === 'number' ? value : Number(value) || 0;
+                  const nameStr = String(name);
+                  return [Math.round(numVal).toLocaleString(), labels[nameStr] || nameStr];
+                }}
+              />
+
+              {/* Goal line */}
+              <ReferenceLine
+                y={goal}
+                stroke="var(--gold)"
+                strokeDasharray="8 4"
                 strokeWidth={2}
-                strokeDasharray="6 3"
-                dot={false}
-                name={view === 'subscribers' ? 'current_subs' : 'current_hours'}
-                animationDuration={500}
+                label={{
+                  value: goalLabel,
+                  position: 'right',
+                  fontSize: 11,
+                  fill: 'var(--gold)',
+                }}
               />
+
+              {/* Historical data */}
               <Area
                 type="monotone"
-                dataKey={view === 'subscribers' ? 'optimistic_subs' : 'optimistic_hours'}
-                stroke="#2E7D32"
-                fill="none"
-                strokeWidth={1.5}
-                strokeDasharray="6 3"
+                dataKey={dataKey}
+                stroke={view === 'subscribers' ? 'var(--gold)' : '#1565C0'}
+                fill={view === 'subscribers' ? 'url(#gradientGold)' : 'url(#gradientBlue)'}
+                strokeWidth={2}
                 dot={false}
-                name={view === 'subscribers' ? 'optimistic_subs' : 'optimistic_hours'}
                 animationDuration={500}
               />
-            </>
-          )}
-        </AreaChart>
-      </ResponsiveContainer>
 
-      {/* Projection legend (only when projections are visible) */}
-      {showProjections && (
-        <div className="flex justify-center gap-6 mt-4 text-xs text-[var(--gray-600)]">
-          <span className="flex items-center gap-1.5">
-            <span className="w-4 h-0 border-t-2 border-dashed border-[var(--gray-400)]" />
-            Conservative
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-4 h-0 border-t-2 border-dashed" style={{ borderColor: view === 'subscribers' ? 'var(--gold)' : '#1565C0' }} />
-            Current Pace
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-4 h-0 border-t-2 border-dashed border-[#2E7D32]" />
-            Optimistic
-          </span>
-        </div>
+              {/* Projection lines (only for 1Y and All) */}
+              {showProjections && (
+                <>
+                  <Area
+                    type="monotone"
+                    dataKey={view === 'subscribers' ? 'conservative_subs' : 'conservative_hours'}
+                    stroke="var(--gray-400)"
+                    fill="none"
+                    strokeWidth={1.5}
+                    strokeDasharray="6 3"
+                    dot={false}
+                    name={view === 'subscribers' ? 'conservative_subs' : 'conservative_hours'}
+                    animationDuration={500}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey={view === 'subscribers' ? 'current_subs' : 'current_hours'}
+                    stroke={view === 'subscribers' ? 'var(--gold)' : '#1565C0'}
+                    fill="none"
+                    strokeWidth={2}
+                    strokeDasharray="6 3"
+                    dot={false}
+                    name={view === 'subscribers' ? 'current_subs' : 'current_hours'}
+                    animationDuration={500}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey={view === 'subscribers' ? 'optimistic_subs' : 'optimistic_hours'}
+                    stroke="#2E7D32"
+                    fill="none"
+                    strokeWidth={1.5}
+                    strokeDasharray="6 3"
+                    dot={false}
+                    name={view === 'subscribers' ? 'optimistic_subs' : 'optimistic_hours'}
+                    animationDuration={500}
+                  />
+                </>
+              )}
+            </AreaChart>
+          </ResponsiveContainer>
+
+          {/* Projection legend (only when projections are visible) */}
+          {showProjections && (
+            <div className="flex justify-center gap-6 mt-4 text-xs text-[var(--gray-600)]">
+              <span className="flex items-center gap-1.5">
+                <span className="w-4 h-0 border-t-2 border-dashed border-[var(--gray-400)]" />
+                Conservative
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-4 h-0 border-t-2 border-dashed" style={{ borderColor: view === 'subscribers' ? 'var(--gold)' : '#1565C0' }} />
+                Current Pace
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-4 h-0 border-t-2 border-dashed border-[#2E7D32]" />
+                Optimistic
+              </span>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

@@ -135,6 +135,8 @@ export default function Dashboard({ data, onReset }: DashboardProps) {
             daily={data.daily}
             currentSubscribers={data.totals.currentSubscribers}
             totalWatchTimeHours={data.totals.totalWatchTimeHours}
+            videosLast90Days={data.videosLast90Days}
+            postingCadenceDays={data.postingCadenceDays}
           />
         </div>
 
@@ -143,7 +145,9 @@ export default function Dashboard({ data, onReset }: DashboardProps) {
           <div className="mb-8 animate-fade-in-up-delay-4">
             <TimelineChart
               data={chartData}
+              daily={data.daily}
               lastHistoricalDate={data.dateRange.end}
+              currentSubscribers={data.totals.currentSubscribers}
             />
           </div>
         )}
@@ -159,6 +163,7 @@ export default function Dashboard({ data, onReset }: DashboardProps) {
             totalWatchHours={data.totals.totalWatchTimeHours}
             currentSubsPerDay={currentSubsPerDay}
             currentHoursPerDay={currentHoursPerDay}
+            postingCadenceDays={data.postingCadenceDays}
           />
         </div>
 

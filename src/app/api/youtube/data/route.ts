@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getValidAccessToken } from '@/lib/auth';
-import { getChannelInfo, getDailyAnalytics, getWatchTimeByContentType } from '@/lib/youtube-api';
+import { getChannelInfo, getDailyAnalytics, getWatchTimeByContentType, getRecentVideoCount } from '@/lib/youtube-api';
 import type { DailyMetrics, ParsedData } from '@/lib/types';
 
 function formatDate(date: Date): string {
@@ -38,6 +38,9 @@ export async function GET() {
       getDailyAnalytics(accessToken, lifetimeStartStr, endStr),
       getWatchTimeByContentType(accessToken, watchTimeStartStr, endStr).catch(() => null),
     ]);
+
+    // Fetch recent video count for posting cadence
+    const recentVideos = await getRecentVideoCount(accessToken, channelInfo.channelId, 90).catch(() => null);
 
     // Convert YouTube Analytics data to DailyMetrics format (lifetime)
     let cumulativeSubscribers = 0;
@@ -99,6 +102,10 @@ export async function GET() {
       watchTimeHoursLast365Days: longFormWatchTimeHours,
       channelName: channelInfo.channelName,
       channelThumbnail: channelInfo.channelThumbnail,
+      videosLast90Days: recentVideos?.totalVideos,
+      postingCadenceDays: recentVideos && recentVideos.totalVideos > 0
+        ? 90 / recentVideos.totalVideos
+        : undefined,
     };
 
     // Add shorts breakdown if available

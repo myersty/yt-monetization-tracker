@@ -6,6 +6,8 @@ type ContentMetricsProps = {
   daily: DailyMetrics[];
   currentSubscribers: number;
   totalWatchTimeHours: number;
+  videosLast90Days?: number;
+  postingCadenceDays?: number;
 };
 
 const SUBSCRIBER_GOAL = 1000;
@@ -15,6 +17,8 @@ export default function ContentMetrics({
   daily,
   currentSubscribers,
   totalWatchTimeHours,
+  videosLast90Days,
+  postingCadenceDays,
 }: ContentMetricsProps) {
   // Last 90 days of data
   const last90 = daily.slice(-90);
@@ -71,6 +75,13 @@ export default function ContentMetrics({
             value={avgViewsPerDay < 1 ? avgViewsPerDay.toFixed(2) : Math.round(avgViewsPerDay).toLocaleString()}
             sublabel={`${totalViews90.toLocaleString()} total views`}
           />
+          {postingCadenceDays !== undefined && (
+            <MetricRow
+              label="Posting Cadence"
+              value={`1 video every ${postingCadenceDays.toFixed(1)} days`}
+              sublabel={`${videosLast90Days ?? 0} videos in last 90 days`}
+            />
+          )}
         </div>
       </div>
 
