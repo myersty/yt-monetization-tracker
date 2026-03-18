@@ -412,6 +412,8 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                     current_hours: 'Current Pace',
                     optimistic_subs: 'Optimistic',
                     optimistic_hours: 'Optimistic',
+                    whatif_subs: 'What-If',
+                    whatif_hours: 'What-If',
                   };
                   const numVal = typeof value === 'number' ? value : Number(value) || 0;
                   const nameStr = String(name);
@@ -482,6 +484,20 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                     name={view === 'subscribers' ? 'optimistic_subs' : 'optimistic_hours'}
                     animationDuration={500}
                   />
+                  {/* What-If scenario line */}
+                  {filteredData.some(d => d[view === 'subscribers' ? 'whatif_subs' : 'whatif_hours'] !== undefined) && (
+                    <Area
+                      type="monotone"
+                      dataKey={view === 'subscribers' ? 'whatif_subs' : 'whatif_hours'}
+                      stroke="#E040FB"
+                      fill="none"
+                      strokeWidth={2.5}
+                      strokeDasharray="4 2"
+                      dot={false}
+                      name={view === 'subscribers' ? 'whatif_subs' : 'whatif_hours'}
+                      animationDuration={300}
+                    />
+                  )}
                 </>
               )}
             </AreaChart>
@@ -502,6 +518,12 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                 <span className="w-4 h-0 border-t-2 border-dashed border-[#2E7D32]" />
                 Optimistic
               </span>
+              {filteredData.some(d => d.whatif_subs !== undefined || d.whatif_hours !== undefined) && (
+                <span className="flex items-center gap-1.5">
+                  <span className="w-4 h-0 border-t-2 border-dashed border-[#E040FB]" />
+                  What-If
+                </span>
+              )}
             </div>
           )}
         </>

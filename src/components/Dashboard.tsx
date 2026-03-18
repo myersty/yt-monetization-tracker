@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { ParsedData } from '@/lib/types';
 import { calculateProjections, generateProjectionPoints, detectOutliers } from '@/lib/projections';
 import ProgressRings from './ProgressRings';
@@ -17,12 +17,18 @@ type DashboardProps = {
   isOAuthDashboard?: boolean;
 };
 
+export type WhatIfRates = {
+  dailyNewSubs: number;
+  dailyWatchHours: number;
+} | null;
+
 export default function Dashboard({ data, onReset, isOAuthDashboard = false }: DashboardProps) {
   const projections = useMemo(() => calculateProjections(data.daily), [data.daily]);
   const outliers = useMemo(() => detectOutliers(data.daily), [data.daily]);
+  const [whatIfRates, setWhatIfRates] = useState<WhatIfRates>(null);
   const chartData = useMemo(
-    () => generateProjectionPoints(data.daily, projections),
-    [data.daily, projections]
+    () => generateProjectionPoints(data.daily, projections, 365, whatIfRates),
+    [data.daily, projections, whatIfRates]
   );
 
   const currentProjection = projections.find(p => p.model === 'current');
@@ -155,6 +161,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
             currentSubsPerDay={currentSubsPerDay}
             currentHoursPerDay={currentHoursPerDay}
             postingCadenceDays={data.postingCadenceDays}
+            onRatesChange={setWhatIfRates}
           />
         </div>
 

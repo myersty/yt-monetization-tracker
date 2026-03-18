@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { WhatIfRates } from './Dashboard';
 
 type WhatIfSimulatorProps = {
   currentSubscribers: number;
@@ -8,6 +9,7 @@ type WhatIfSimulatorProps = {
   currentSubsPerDay: number;
   currentHoursPerDay: number;
   postingCadenceDays?: number;
+  onRatesChange?: (rates: WhatIfRates) => void;
 };
 
 export default function WhatIfSimulator({
@@ -16,6 +18,7 @@ export default function WhatIfSimulator({
   currentSubsPerDay,
   currentHoursPerDay,
   postingCadenceDays,
+  onRatesChange,
 }: WhatIfSimulatorProps) {
   const actualCadence = postingCadenceDays ?? 7;
   const [daysBetweenPosts, setDaysBetweenPosts] = useState(Math.round(actualCadence));
@@ -62,6 +65,16 @@ export default function WhatIfSimulator({
       weeklyNewSubs,
     };
   }, [daysBetweenPosts, avgVideoMinutes, avgViewsPerVideo, currentSubscribers, totalWatchHours]);
+
+  // Report rates to parent for timeline integration
+  useEffect(() => {
+    if (onRatesChange) {
+      onRatesChange({
+        dailyNewSubs: projection.dailyNewSubs,
+        dailyWatchHours: projection.dailyWatchHours,
+      });
+    }
+  }, [projection.dailyNewSubs, projection.dailyWatchHours, onRatesChange]);
 
   return (
     <div className="rounded-[var(--card-radius)] border border-[var(--gray-200)] bg-[var(--background)] p-6 shadow-[var(--card-shadow)]">

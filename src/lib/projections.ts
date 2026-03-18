@@ -321,7 +321,8 @@ function optimisticProjection(daily: DailyMetrics[]): Projection {
 export function generateProjectionPoints(
   daily: DailyMetrics[],
   projections: Projection[],
-  projectionDays: number = 365
+  projectionDays: number = 365,
+  whatIfRates?: { dailyNewSubs: number; dailyWatchHours: number } | null
 ): ProjectionPoint[] {
   const cumSubs = getCumulativeSubscribers(daily);
   const cumHours = getCumulativeWatchHours(daily);
@@ -360,6 +361,11 @@ export function generateProjectionPoints(
     if (optimistic) {
       point.optimistic_subs = lastSubs + optimistic.subscriberProjection.dailyRate * day;
       point.optimistic_hours = lastHours + optimistic.watchTimeProjection.dailyRate * day;
+    }
+
+    if (whatIfRates) {
+      point.whatif_subs = lastSubs + whatIfRates.dailyNewSubs * day;
+      point.whatif_hours = lastHours + whatIfRates.dailyWatchHours * day;
     }
 
     futurePoints.push(point);

@@ -70,6 +70,8 @@ export type ProjectionPoint = {
   current_hours?: number;
   optimistic_subs?: number;
   optimistic_hours?: number;
+  whatif_subs?: number;
+  whatif_hours?: number;
 };
 
 export type OutlierInfo = {
