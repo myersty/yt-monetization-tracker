@@ -53,7 +53,9 @@ export async function getChannelInfo(accessToken: string): Promise<ChannelInfo> 
 
 /**
  * Fetch daily analytics using YouTube Analytics API.
- * Uses creatorContentType filter to exclude Shorts watch time.
+ * Fetches all content types (long-form + Shorts) since the creatorContentType
+ * filter is not supported with the day dimension. Shorts filtering will be
+ * handled separately using the creatorContentType dimension query.
  */
 export async function getDailyAnalytics(
   accessToken: string,
@@ -69,7 +71,6 @@ export async function getDailyAnalytics(
     'metrics',
     'subscribersGained,subscribersLost,estimatedMinutesWatched,views'
   );
-  url.searchParams.set('filters', 'creatorContentType==VIDEO_OF_ANY_LENGTH');
   url.searchParams.set('sort', 'day');
 
   const response = await fetch(url.toString(), {
