@@ -94,8 +94,25 @@ export default function ProgressRings({
   const hoursPercent = Math.min(Math.round((totalWatchHours / watchHoursGoal) * 100), 100);
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="relative w-[300px] h-[300px]">
+    <div className="flex items-center justify-center gap-6 sm:gap-10">
+      {/* Left — Subscribers */}
+      <div className="flex flex-col items-end text-right">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="w-2.5 h-2.5 rounded-full bg-[var(--gold)]" />
+          <p className="text-xs uppercase tracking-wider text-[var(--gray-600)] font-semibold">
+            Subscribers
+          </p>
+        </div>
+        <p className="font-[family-name:var(--font-display)] font-bold text-3xl sm:text-4xl text-[var(--foreground)]">
+          {currentSubscribers.toLocaleString()}
+        </p>
+        <p className="text-sm text-[var(--gray-500)] mt-0.5">
+          / {subscriberGoal.toLocaleString()}
+        </p>
+      </div>
+
+      {/* Center — Rings */}
+      <div className="relative w-[200px] h-[200px] sm:w-[260px] sm:h-[260px] flex-shrink-0">
         <svg viewBox="0 0 300 300" className="w-full h-full">
           {/* Outer ring — Subscribers */}
           <Ring
@@ -121,41 +138,29 @@ export default function ProgressRings({
 
         {/* Center text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <p className="text-3xl font-bold font-[family-name:var(--font-display)] text-[var(--foreground)]">
+          <p className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-display)] text-[var(--foreground)]">
             {Math.round(Math.min(((subsPercent + hoursPercent) / 2), 100))}%
           </p>
-          <p className="text-xs uppercase tracking-wider text-[var(--gray-600)] font-semibold mt-1">
+          <p className="text-[10px] sm:text-xs uppercase tracking-wider text-[var(--gray-600)] font-semibold mt-1">
             To Monetization
           </p>
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="flex gap-8 mt-6">
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full bg-[var(--gold)]" />
-          <div>
-            <p className="text-xs uppercase tracking-wider text-[var(--gray-600)] font-semibold">
-              Subscribers
-            </p>
-            <p className="font-[family-name:var(--font-display)] font-bold text-lg">
-              {currentSubscribers.toLocaleString()}
-              <span className="text-[var(--gray-500)] text-sm font-normal"> / {subscriberGoal.toLocaleString()}</span>
-            </p>
-          </div>
+      {/* Right — Watch Hours */}
+      <div className="flex flex-col items-start text-left">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#1565C0]" />
+          <p className="text-xs uppercase tracking-wider text-[var(--gray-600)] font-semibold">
+            Watch Hours
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full bg-[#1565C0]" />
-          <div>
-            <p className="text-xs uppercase tracking-wider text-[var(--gray-600)] font-semibold">
-              Watch Hours
-            </p>
-            <p className="font-[family-name:var(--font-display)] font-bold text-lg">
-              {Math.round(totalWatchHours).toLocaleString()}
-              <span className="text-[var(--gray-500)] text-sm font-normal"> / {watchHoursGoal.toLocaleString()}</span>
-            </p>
-          </div>
-        </div>
+        <p className="font-[family-name:var(--font-display)] font-bold text-3xl sm:text-4xl text-[var(--foreground)]">
+          {Math.round(totalWatchHours).toLocaleString()}
+        </p>
+        <p className="text-sm text-[var(--gray-500)] mt-0.5">
+          / {watchHoursGoal.toLocaleString()}
+        </p>
       </div>
     </div>
   );
