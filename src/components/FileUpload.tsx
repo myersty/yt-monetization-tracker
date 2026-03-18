@@ -28,7 +28,8 @@ export default function FileUpload({ onFilesSelected, isLoading }: FileUploadPro
     setIsDragging(false);
 
     const files = Array.from(e.dataTransfer.files).filter(
-      f => f.name.endsWith('.csv') || f.type === 'text/csv'
+      f => f.name.endsWith('.csv') || f.type === 'text/csv' ||
+           f.name.endsWith('.zip') || f.type === 'application/zip'
     );
     if (files.length > 0) {
       setSelectedFiles(files);
@@ -65,7 +66,7 @@ export default function FileUpload({ onFilesSelected, isLoading }: FileUploadPro
         <input
           ref={inputRef}
           type="file"
-          accept=".csv"
+          accept=".csv,.zip"
           multiple
           onChange={handleFileInput}
           className="hidden"
@@ -91,7 +92,7 @@ export default function FileUpload({ onFilesSelected, isLoading }: FileUploadPro
         ) : (
           <>
             <p className="text-[var(--foreground)] font-medium font-[family-name:var(--font-display)] text-lg">
-              Drop your YouTube Studio CSV files here
+              Drop your YouTube Studio export here
             </p>
             <p className="text-[var(--gray-600)] text-sm mt-2">
               or click to browse

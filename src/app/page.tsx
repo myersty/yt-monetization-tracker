@@ -1,10 +1,26 @@
 'use client';
 
 import { useState } from 'react';
+import JSZip from 'jszip';
 import FileUpload from '@/components/FileUpload';
 import Dashboard from '@/components/Dashboard';
 import { parseAllCSVs } from '@/lib/csv-parser';
 import { ParsedData } from '@/lib/types';
+
+async function extractCSVsFromZip(file: File): Promise<File[]> {
+  const zip = await JSZip.loadAsync(file);
+  const csvFiles: File[] = [];
+
+  for (const [filename, zipEntry] of Object.entries(zip.files)) {
+    if (zipEntry.dir) continue;
+    if (filename.toLowerCase().endsWith('.csv')) {
+      const blob = await zipEntry.async('blob');
+      csvFiles.push(new File([blob], filename, { type: 'text/csv' }));
+    }
+  }
+
+  return csvFiles;
+}
 
 export default function Home() {
   const [parsedData, setParsedData] = useState<ParsedData | null>(null);
@@ -15,7 +31,24 @@ export default function Home() {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await parseAllCSVs(files);
+      // If any file is a zip, extract CSVs from it
+      let csvFiles: File[] = [];
+      for (const file of files) {
+        if (file.name.toLowerCase().endsWith('.zip') || file.type === 'application/zip') {
+          const extracted = await extractCSVsFromZip(file);
+          csvFiles.push(...extracted);
+        } else {
+          csvFiles.push(file);
+        }
+      }
+
+      if (csvFiles.length === 0) {
+        setError('No CSV files found. Upload a .zip or .csv file from YouTube Studio.');
+        setIsLoading(false);
+        return;
+      }
+
+      const data = await parseAllCSVs(csvFiles);
 
       if (data.daily.length === 0) {
         setError('No data found in the uploaded files. Make sure you exported from YouTube Studio Analytics.');
@@ -25,7 +58,7 @@ export default function Home() {
 
       setParsedData(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to parse CSV files');
+      setError(err instanceof Error ? err.message : 'Failed to parse files');
     } finally {
       setIsLoading(false);
     }
@@ -91,7 +124,7 @@ export default function Home() {
                 { step: '3', text: 'Click Metrics \u2192 check Views, Watch time (hours), and Subscribers \u2192 Apply' },
                 { step: '4', text: 'Set the date range to "Last 365 days"' },
                 { step: '5', text: 'Click the download icon \u2192 Comma-separated values (.csv)' },
-                { step: '6', text: 'Unzip and upload the "Table data.csv" file here' },
+                { step: '6', text: 'Drop the downloaded .zip file here (no need to unzip!)' },
               ].map(({ step, text }) => (
                 <div key={step} className="flex items-center gap-4">
                   <span className="w-8 h-8 rounded-full bg-[var(--foreground)] text-[var(--background)] flex items-center justify-center text-sm font-bold font-[family-name:var(--font-display)] flex-shrink-0">
