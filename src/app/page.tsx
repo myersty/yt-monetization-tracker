@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import JSZip from 'jszip';
 import FileUpload from '@/components/FileUpload';
 import Dashboard from '@/components/Dashboard';
@@ -20,6 +21,14 @@ async function extractCSVsFromZip(file: File): Promise<File[]> {
   }
 
   return csvFiles;
+}
+
+function YouTubeIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+    </svg>
+  );
 }
 
 export default function Home() {
@@ -85,32 +94,91 @@ export default function Home() {
             How Close Are You to Monetization?
           </h1>
           <p className="text-[var(--gray-400)] text-lg leading-relaxed max-w-lg mx-auto">
-            Upload your YouTube Studio analytics and see exactly where you stand on
-            the path to 1,000 subscribers and 4,000 watch hours.
+            Connect your YouTube channel or upload your analytics to see exactly
+            where you stand on the path to 1,000 subscribers and 4,000 watch hours.
           </p>
         </div>
       </div>
 
-      {/* Upload Section */}
+      {/* Options Section */}
       <div className="flex-1 bg-[var(--gray-50)] py-16 px-6">
         <div className="max-w-2xl mx-auto">
-          {/* Privacy badge */}
-          <div className="flex items-center justify-center gap-2 mb-8">
-            <svg className="w-4 h-4 text-[#2E7D32]" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-            </svg>
-            <p className="text-sm text-[var(--gray-600)]">
-              Your data never leaves your browser. Everything is processed locally.
-            </p>
+
+          {/* Option A: Connect with YouTube */}
+          <div className="rounded-[var(--card-radius)] border border-[var(--gray-200)] bg-[var(--background)] p-8 shadow-[var(--card-shadow)] mb-6">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center gap-2 mb-3">
+                <YouTubeIcon className="w-6 h-6 text-[#FF0000]" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-[var(--gold)]">
+                  Recommended
+                </span>
+              </div>
+              <h2 className="font-[family-name:var(--font-display)] font-bold text-xl mb-2">
+                Connect Your YouTube Channel
+              </h2>
+              <p className="text-sm text-[var(--gray-600)]">
+                Automatically pull your analytics data
+              </p>
+            </div>
+
+            <a
+              href="/api/auth/login"
+              className="flex items-center justify-center gap-3 w-full max-w-sm mx-auto px-6 py-3.5 rounded-full bg-[var(--gold)] text-white font-semibold text-base transition-all duration-200 hover:bg-[var(--gold-hover)] hover:shadow-lg hover:shadow-[var(--gold)]/20 active:scale-[0.98]"
+            >
+              <YouTubeIcon className="w-5 h-5" />
+              Connect Your YouTube Channel
+            </a>
+
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-md mx-auto">
+              {[
+                { icon: '👥', text: 'Accurate subscriber count' },
+                { icon: '⏱️', text: 'Real watch hours (Shorts filtered)' },
+                { icon: '🔄', text: 'Auto-refreshes daily' },
+              ].map(({ icon, text }) => (
+                <div key={text} className="flex items-center gap-2 text-sm text-[var(--gray-700)]">
+                  <span className="text-base flex-shrink-0">{icon}</span>
+                  <span>{text}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <FileUpload onFilesSelected={handleFilesSelected} isLoading={isLoading} />
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-8">
+            <div className="flex-1 h-px bg-[var(--gray-300)]" />
+            <span className="text-sm font-medium text-[var(--gray-500)] uppercase tracking-wider">or</span>
+            <div className="flex-1 h-px bg-[var(--gray-300)]" />
+          </div>
 
-          {error && (
-            <div className="mt-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm text-center">
-              {error}
+          {/* Option B: Upload CSV */}
+          <div className="rounded-[var(--card-radius)] border border-[var(--gray-200)] bg-[var(--background)] p-8 shadow-[var(--card-shadow)]">
+            <div className="text-center mb-6">
+              <h2 className="font-[family-name:var(--font-display)] font-bold text-lg mb-2">
+                Upload CSV
+              </h2>
+              <p className="text-sm text-[var(--gray-600)]">
+                Export from YouTube Studio and upload
+              </p>
             </div>
-          )}
+
+            {/* Privacy badge */}
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <svg className="w-4 h-4 text-[#2E7D32]" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+              </svg>
+              <p className="text-sm text-[var(--gray-600)]">
+                Your data never leaves your browser. Everything is processed locally.
+              </p>
+            </div>
+
+            <FileUpload onFilesSelected={handleFilesSelected} isLoading={isLoading} />
+
+            {error && (
+              <div className="mt-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm text-center">
+                {error}
+              </div>
+            )}
+          </div>
 
           {/* How-to Guide */}
           <div className="mt-12">
@@ -143,9 +211,15 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="py-6 px-6 border-t border-[var(--gray-200)] text-center">
-        <p className="text-xs text-[var(--gray-500)]">
-          Built by Ty Myers Media LLC
-        </p>
+        <div className="flex items-center justify-center gap-4">
+          <p className="text-xs text-[var(--gray-500)]">
+            Built by Ty Myers Media LLC
+          </p>
+          <span className="text-[var(--gray-400)]">&middot;</span>
+          <Link href="/privacy" className="text-xs text-[var(--gray-500)] hover:text-[var(--gold)] transition-colors">
+            Privacy Policy
+          </Link>
+        </div>
       </footer>
     </main>
   );
