@@ -21,6 +21,8 @@ type WeeksToGoalPoint = {
   weeksToHoursGoal: number | null;
 };
 
+type ChartDataPoint = ProjectionPoint & { timestamp: number };
+
 type TimelineChartProps = {
   data: ProjectionPoint[];
   daily: DailyMetrics[];
@@ -47,28 +49,55 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
   const goalLabel = view === 'subscribers' ? '1,000 Subscribers' : '4,000 Watch Hours';
   const dataKey = view === 'subscribers' ? 'subscribers' : 'watchTimeHours';
 
-  // Filter data by selected time range
-  const filteredData = useMemo(() => {
+  // Filter data by selected time range and add timestamps for proper time-based x-axis
+  const filteredData = useMemo((): ChartDataPoint[] => {
     const rangeDef = TIME_RANGES.find(r => r.key === timeRange);
-    if (!rangeDef || rangeDef.days === null) return data;
 
-    // For time ranges, show historical data from that window + projections only for 1Y/All
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - rangeDef.days);
-    const cutoffStr = cutoffDate.toISOString().split('T')[0];
+    let result: ProjectionPoint[];
+    if (!rangeDef || rangeDef.days === null) {
+      result = data;
+    } else {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - rangeDef.days);
+      const cutoffStr = cutoffDate.toISOString().split('T')[0];
 
-    // Filter historical data to the window
-    const historicalInRange = data.filter(
-      d => d.date >= cutoffStr && d.date <= lastHistoricalDate
-    );
+      const historicalInRange = data.filter(
+        d => d.date >= cutoffStr && d.date <= lastHistoricalDate
+      );
 
-    // Only show projections for 1Y and All
-    if (timeRange === '1Y') {
-      const projectionData = data.filter(d => d.date > lastHistoricalDate);
-      return [...historicalInRange, ...projectionData];
+      if (timeRange === '1Y') {
+        const projectionData = data.filter(d => d.date > lastHistoricalDate);
+        result = [...historicalInRange, ...projectionData];
+      } else {
+        result = historicalInRange;
+      }
     }
 
-    return historicalInRange;
+    // Thin out dense historical data for smoother chart rendering
+    // For ranges > 6 months, sample every 3rd day for historical data
+    const thinned: ProjectionPoint[] = [];
+    for (let i = 0; i < result.length; i++) {
+      const isProjection = result[i].date > lastHistoricalDate;
+      const isLast = i === result.length - 1;
+      const isLastHistorical = result[i].date === lastHistoricalDate;
+
+      if (isProjection || isLastHistorical || isLast) {
+        thinned.push(result[i]);
+      } else if (timeRange === 'All' || timeRange === '1Y') {
+        // For longer ranges, sample every 3rd day
+        if (i % 3 === 0) thinned.push(result[i]);
+      } else if (timeRange === '6M') {
+        if (i % 2 === 0) thinned.push(result[i]);
+      } else {
+        thinned.push(result[i]);
+      }
+    }
+
+    // Add timestamps for time-based x-axis
+    return thinned.map(d => ({
+      ...d,
+      timestamp: new Date(d.date).getTime(),
+    }));
   }, [data, timeRange, lastHistoricalDate]);
 
   // Check if already monetization-eligible
@@ -353,10 +382,12 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-200)" />
               <XAxis
-                dataKey="date"
-                tickFormatter={formatDate}
+                dataKey="timestamp"
+                type="number"
+                scale="time"
+                domain={['dataMin', 'dataMax']}
+                tickFormatter={(ts) => formatDate(new Date(ts).toISOString().split('T')[0])}
                 tick={{ fontSize: 11, fill: 'var(--gray-600)' }}
-                interval="preserveStartEnd"
                 minTickGap={60}
               />
               <YAxis
@@ -365,7 +396,7 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                 width={50}
               />
               <Tooltip
-                labelFormatter={(label) => new Date(label).toLocaleDateString('en-US', {
+                labelFormatter={(ts) => new Date(ts).toLocaleDateString('en-US', {
                   weekday: 'short',
                   month: 'short',
                   day: 'numeric',
@@ -384,6 +415,7 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                   };
                   const numVal = typeof value === 'number' ? value : Number(value) || 0;
                   const nameStr = String(name);
+                  if (nameStr === 'timestamp') return null;
                   return [Math.round(numVal).toLocaleString(), labels[nameStr] || nameStr];
                 }}
               />
