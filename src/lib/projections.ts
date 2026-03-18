@@ -348,36 +348,18 @@ export function generateProjectionPoints(
     const point: ProjectionPoint = { date };
 
     if (conservative) {
-      point.conservative_subs = Math.min(
-        lastSubs + conservative.subscriberProjection.dailyRate * day,
-        SUBSCRIBER_GOAL * 1.2
-      );
-      point.conservative_hours = Math.min(
-        lastHours + conservative.watchTimeProjection.dailyRate * day,
-        WATCH_HOURS_GOAL * 1.2
-      );
+      point.conservative_subs = lastSubs + conservative.subscriberProjection.dailyRate * day;
+      point.conservative_hours = lastHours + conservative.watchTimeProjection.dailyRate * day;
     }
 
     if (current) {
-      point.current_subs = Math.min(
-        lastSubs + current.subscriberProjection.dailyRate * day,
-        SUBSCRIBER_GOAL * 1.2
-      );
-      point.current_hours = Math.min(
-        lastHours + current.watchTimeProjection.dailyRate * day,
-        WATCH_HOURS_GOAL * 1.2
-      );
+      point.current_subs = lastSubs + current.subscriberProjection.dailyRate * day;
+      point.current_hours = lastHours + current.watchTimeProjection.dailyRate * day;
     }
 
     if (optimistic) {
-      point.optimistic_subs = Math.min(
-        lastSubs + optimistic.subscriberProjection.dailyRate * day,
-        SUBSCRIBER_GOAL * 1.2
-      );
-      point.optimistic_hours = Math.min(
-        lastHours + optimistic.watchTimeProjection.dailyRate * day,
-        WATCH_HOURS_GOAL * 1.2
-      );
+      point.optimistic_subs = lastSubs + optimistic.subscriberProjection.dailyRate * day;
+      point.optimistic_hours = lastHours + optimistic.watchTimeProjection.dailyRate * day;
     }
 
     futurePoints.push(point);
