@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getValidAccessToken } from '@/lib/auth';
-import { getChannelInfo, getDailyAnalytics } from '@/lib/youtube-api';
+import { getChannelInfo, getDailyAnalytics, getWatchTimeByContentType } from '@/lib/youtube-api';
 import type { DailyMetrics, ParsedData } from '@/lib/types';
 
 function formatDate(date: Date): string {
@@ -20,23 +20,28 @@ export async function GET() {
       );
     }
 
-    // Calculate date range: last 365 days
+    // Date ranges
     const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 365);
-
-    const startStr = formatDate(startDate);
     const endStr = formatDate(endDate);
 
-    // Fetch channel info and daily analytics in parallel
-    const [channelInfo, analyticsRows] = await Promise.all([
+    // Lifetime start: as far back as the API allows
+    const lifetimeStartStr = '2005-01-01';
+
+    // Last 365 days for watch time calculation
+    const watchTimeStart = new Date();
+    watchTimeStart.setDate(watchTimeStart.getDate() - 365);
+    const watchTimeStartStr = formatDate(watchTimeStart);
+
+    // Fetch channel info, lifetime analytics, and shorts breakdown in parallel
+    const [channelInfo, lifetimeRows, shortsData] = await Promise.all([
       getChannelInfo(accessToken),
-      getDailyAnalytics(accessToken, startStr, endStr),
+      getDailyAnalytics(accessToken, lifetimeStartStr, endStr),
+      getWatchTimeByContentType(accessToken, watchTimeStartStr, endStr).catch(() => null),
     ]);
 
-    // Convert YouTube Analytics data to DailyMetrics format
+    // Convert YouTube Analytics data to DailyMetrics format (lifetime)
     let cumulativeSubscribers = 0;
-    const daily: DailyMetrics[] = analyticsRows.map((row) => {
+    const daily: DailyMetrics[] = lifetimeRows.map((row) => {
       const net = row.subscribersGained - row.subscribersLost;
       cumulativeSubscribers += net;
 
@@ -51,7 +56,6 @@ export async function GET() {
     });
 
     // Adjust cumulative subscribers so the last day matches the actual count
-    // The analytics API only gives gained/lost, so we need to offset
     if (daily.length > 0) {
       const lastCumulative = daily[daily.length - 1].subscribers || 0;
       const actualSubs = channelInfo.subscriberCount;
@@ -63,11 +67,19 @@ export async function GET() {
       }
     }
 
-    const totalWatchTimeHours = daily.reduce(
+    // Calculate watch time for last 365 days only (long-form for monetization)
+    const last365Days = daily.filter(d => d.date >= watchTimeStartStr);
+    const totalWatchTimeHoursAll = last365Days.reduce(
       (sum, d) => sum + (d.watchTimeHours || 0),
       0
     );
-    const totalViews = daily.reduce(
+
+    // If we have shorts breakdown, use long-form only; otherwise use total
+    const longFormWatchTimeHours = shortsData
+      ? shortsData.longForm
+      : totalWatchTimeHoursAll;
+
+    const totalViews = last365Days.reduce(
       (sum, d) => sum + (d.views || 0),
       0
     );
@@ -76,15 +88,27 @@ export async function GET() {
       daily,
       totals: {
         currentSubscribers: channelInfo.subscriberCount,
-        totalWatchTimeHours: totalWatchTimeHours,
+        totalWatchTimeHours: longFormWatchTimeHours,
         totalViews: totalViews,
       },
       dateRange: {
-        start: daily[0]?.date || startStr,
+        start: daily[0]?.date || lifetimeStartStr,
         end: daily[daily.length - 1]?.date || endStr,
       },
       filesDetected: ['subscribers', 'watchtime', 'views'],
+      watchTimeHoursLast365Days: longFormWatchTimeHours,
+      channelName: channelInfo.channelName,
+      channelThumbnail: channelInfo.channelThumbnail,
     };
+
+    // Add shorts breakdown if available
+    if (shortsData) {
+      parsedData.shortsBreakdown = {
+        shortsWatchTimeHours: shortsData.shorts,
+        longFormWatchTimeHours: shortsData.longForm,
+        totalWatchTimeHours: shortsData.total,
+      };
+    }
 
     return NextResponse.json(parsedData);
   } catch (error) {

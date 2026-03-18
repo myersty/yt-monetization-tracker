@@ -99,24 +99,20 @@ export async function getDailyAnalytics(
 }
 
 /**
- * Fetch daily analytics WITHOUT the creatorContentType filter.
- * This includes Shorts, allowing comparison of Shorts vs long-form.
+ * Fetch watch time broken down by content type (Shorts vs long-form).
+ * Uses the creatorContentType dimension to separate SHORTS from VIDEO_OF_ANY_LENGTH.
  */
-export async function getAnalyticsWithShorts(
+export async function getWatchTimeByContentType(
   accessToken: string,
   startDate: string,
   endDate: string
-): Promise<DailyAnalyticsRow[]> {
+): Promise<{ longForm: number; shorts: number; total: number }> {
   const url = new URL(`${YT_ANALYTICS_API}/reports`);
   url.searchParams.set('ids', 'channel==MINE');
   url.searchParams.set('startDate', startDate);
   url.searchParams.set('endDate', endDate);
-  url.searchParams.set('dimensions', 'day');
-  url.searchParams.set(
-    'metrics',
-    'subscribersGained,subscribersLost,estimatedMinutesWatched,views'
-  );
-  url.searchParams.set('sort', 'day');
+  url.searchParams.set('dimensions', 'creatorContentType');
+  url.searchParams.set('metrics', 'estimatedMinutesWatched');
 
   const response = await fetch(url.toString(), {
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -130,15 +126,23 @@ export async function getAnalyticsWithShorts(
   }
 
   const data = await response.json();
-  const rows: DailyAnalyticsRow[] = (data.rows || []).map(
-    (row: (string | number)[]) => ({
-      date: row[0] as string,
-      subscribersGained: row[1] as number,
-      subscribersLost: row[2] as number,
-      watchTimeMinutes: row[3] as number,
-      views: row[4] as number,
-    })
-  );
+  let longFormMinutes = 0;
+  let shortsMinutes = 0;
 
-  return rows;
+  for (const row of data.rows || []) {
+    const contentType = row[0] as string;
+    const minutes = row[1] as number;
+    if (contentType === 'SHORTS') {
+      shortsMinutes += minutes;
+    } else {
+      // VIDEO_OF_ANY_LENGTH or any other type counts as long-form
+      longFormMinutes += minutes;
+    }
+  }
+
+  return {
+    longForm: longFormMinutes / 60,
+    shorts: shortsMinutes / 60,
+    total: (longFormMinutes + shortsMinutes) / 60,
+  };
 }

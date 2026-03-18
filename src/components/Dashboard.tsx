@@ -9,6 +9,7 @@ import CountdownCard from './CountdownCard';
 import VelocitySparkline from './VelocitySparkline';
 import MilestoneMarkers from './MilestoneMarkers';
 import WhatIfSimulator from './WhatIfSimulator';
+import ContentMetrics from './ContentMetrics';
 
 type DashboardProps = {
   data: ParsedData;
@@ -31,6 +32,9 @@ export default function Dashboard({ data, onReset }: DashboardProps) {
   const hasSubData = data.daily.some(d => d.subscribersGained !== undefined || d.subscribers !== undefined);
   const hasWatchData = data.daily.some(d => d.watchTimeHours !== undefined);
   const hasViewData = data.daily.some(d => d.views !== undefined);
+
+  // Shorts breakdown
+  const shortsBreakdown = data.shortsBreakdown;
 
   return (
     <div className="min-h-screen bg-[var(--gray-50)]">
@@ -65,6 +69,21 @@ export default function Dashboard({ data, onReset }: DashboardProps) {
               {!hasWatchData && ' Watch Time'}
               {' '}data from YouTube Studio&apos;s Advanced Mode.
               {hasViewData && ' Currently showing projections based on available view data.'}
+            </p>
+          </div>
+        )}
+
+        {/* Shorts info badge */}
+        {shortsBreakdown && shortsBreakdown.shortsWatchTimeHours > 0 && (
+          <div className="mb-6 p-3 rounded-[var(--card-radius)] bg-[#1565C0]/5 border border-[#1565C0]/20 animate-fade-in-up">
+            <p className="text-sm text-[var(--gray-700)] flex items-center gap-2">
+              <svg className="w-4 h-4 text-[#1565C0] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>
+                Watch hours shown are <strong>long-form only</strong>.{' '}
+                {Math.round(shortsBreakdown.shortsWatchTimeHours).toLocaleString()} hours from Shorts excluded.
+              </span>
             </p>
           </div>
         )}
@@ -110,9 +129,18 @@ export default function Dashboard({ data, onReset }: DashboardProps) {
           </div>
         </div>
 
+        {/* Content Metrics + Path to Monetization */}
+        <div className="mb-8 animate-fade-in-up-delay-3">
+          <ContentMetrics
+            daily={data.daily}
+            currentSubscribers={data.totals.currentSubscribers}
+            totalWatchTimeHours={data.totals.totalWatchTimeHours}
+          />
+        </div>
+
         {/* Timeline Chart */}
         {chartData.length > 0 && (
-          <div className="mb-8 animate-fade-in-up-delay-3">
+          <div className="mb-8 animate-fade-in-up-delay-4">
             <TimelineChart
               data={chartData}
               lastHistoricalDate={data.dateRange.end}
@@ -171,8 +199,17 @@ export default function Dashboard({ data, onReset }: DashboardProps) {
             <StatBlock label="Date Range" value={`${data.daily.length} days`} />
             <StatBlock label="Total Views" value={data.totals.totalViews.toLocaleString()} />
             <StatBlock label="Subscribers" value={data.totals.currentSubscribers.toLocaleString()} />
-            <StatBlock label="Watch Hours" value={Math.round(data.totals.totalWatchTimeHours).toLocaleString()} />
+            <StatBlock
+              label={shortsBreakdown ? 'Watch Hours (Long-Form)' : 'Watch Hours'}
+              value={Math.round(data.totals.totalWatchTimeHours).toLocaleString()}
+            />
           </div>
+          {shortsBreakdown && (
+            <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <StatBlock label="Shorts Watch Hours" value={Math.round(shortsBreakdown.shortsWatchTimeHours).toLocaleString()} />
+              <StatBlock label="Total Watch Hours" value={Math.round(shortsBreakdown.totalWatchTimeHours).toLocaleString()} />
+            </div>
+          )}
           <div className="mt-4 pt-4 border-t border-[var(--gray-200)]">
             <p className="text-xs text-[var(--gray-500)]">
               Files detected: {data.filesDetected.join(', ') || 'auto-detected'}

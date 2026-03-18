@@ -165,7 +165,7 @@ export default function DashboardPage() {
                   <img
                     src={authStatus.channel.thumbnail}
                     alt={authStatus.channel.name}
-                    className="w-8 h-8 rounded-full"
+                    className="w-10 h-10 rounded-full border border-[var(--gray-300)]"
                   />
                 )}
                 <div>

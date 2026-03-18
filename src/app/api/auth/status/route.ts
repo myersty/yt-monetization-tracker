@@ -14,6 +14,12 @@ export async function GET() {
       const channelInfo = await getChannelInfo(accessToken);
       return NextResponse.json({
         authenticated: true,
+        channel: {
+          name: channelInfo.channelName,
+          thumbnail: channelInfo.channelThumbnail,
+          subscriberCount: channelInfo.subscriberCount,
+        },
+        // Keep flat fields for backwards compat
         channelName: channelInfo.channelName,
         channelThumbnail: channelInfo.channelThumbnail,
       });

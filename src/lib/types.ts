@@ -7,11 +7,17 @@ export type DailyMetrics = {
   views?: number;
 };
 
+export type ShortsBreakdown = {
+  shortsWatchTimeHours: number;
+  longFormWatchTimeHours: number;
+  totalWatchTimeHours: number;
+};
+
 export type ParsedData = {
   daily: DailyMetrics[];
   totals: {
     currentSubscribers: number;
-    totalWatchTimeHours: number;
+    totalWatchTimeHours: number; // long-form only (last 365 days)
     totalViews: number;
   };
   dateRange: {
@@ -19,6 +25,13 @@ export type ParsedData = {
     end: string;
   };
   filesDetected: CSVFileType[];
+  /** Watch time for last 365 days (long-form only). Same as totals.totalWatchTimeHours for API data. */
+  watchTimeHoursLast365Days?: number;
+  /** Shorts vs long-form breakdown (only available from API, not CSV) */
+  shortsBreakdown?: ShortsBreakdown;
+  /** Channel info passed through from the API */
+  channelName?: string;
+  channelThumbnail?: string;
 };
 
 export type CSVFileType = 'subscribers' | 'watchtime' | 'views' | 'unknown';
