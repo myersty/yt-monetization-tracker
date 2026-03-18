@@ -180,6 +180,19 @@ export default function Home() {
             )}
           </div>
 
+          {/* Demo Link */}
+          <div className="mt-10 text-center">
+            <p className="text-sm text-[var(--gray-600)]">
+              Want to see it in action?{' '}
+              <Link
+                href="/demo"
+                className="text-[var(--gold)] hover:underline transition-colors font-medium"
+              >
+                Try the demo &rarr;
+              </Link>
+            </p>
+          </div>
+
           {/* How-to Guide */}
           <div className="mt-12">
             <h2 className="font-[family-name:var(--font-display)] font-bold text-lg text-center mb-6">
