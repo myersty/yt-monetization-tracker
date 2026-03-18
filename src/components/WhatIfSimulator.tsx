@@ -65,9 +65,26 @@ export default function WhatIfSimulator({
 
   return (
     <div className="rounded-[var(--card-radius)] border border-[var(--gray-200)] bg-[var(--background)] p-6 shadow-[var(--card-shadow)]">
-      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--gray-600)] mb-1">
-        What-If Simulator
-      </p>
+      <div className="flex items-center justify-between mb-1">
+        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--gray-600)]">
+          What-If Simulator
+        </p>
+        <button
+          onClick={() => {
+            setDaysBetweenPosts(Math.round(actualCadence));
+            setAvgVideoMinutes(10);
+            setAvgViewsPerVideo(500);
+          }}
+          className="text-xs text-[var(--gray-500)] hover:text-[var(--gold)] transition-colors flex items-center gap-1"
+          title="Reset sliders to defaults"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="1 4 1 10 7 10" />
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+          </svg>
+          Reset
+        </button>
+      </div>
       <p className="text-[var(--gray-500)] text-sm mb-6">
         Adjust the sliders to see how your posting schedule affects your timeline.
       </p>
