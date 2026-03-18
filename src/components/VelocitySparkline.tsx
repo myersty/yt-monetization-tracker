@@ -121,9 +121,9 @@ export default function VelocityCard({ daily, availableMetrics }: VelocityCardPr
                 borderRadius: '8px',
                 fontSize: '12px',
               }}
-              labelFormatter={formatDate}
-              formatter={(value: number) => [
-                Math.round(value).toLocaleString(),
+              labelFormatter={(label) => formatDate(String(label))}
+              formatter={(value) => [
+                Math.round(Number(value)).toLocaleString(),
                 TAB_CONFIG[activeTab].label.replace(' / Day', ''),
               ]}
             />
