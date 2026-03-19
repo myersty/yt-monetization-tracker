@@ -129,8 +129,8 @@ export function generateMockData(): ParsedData {
     videosLast90Days: 16,
     postingCadenceDays: 5.5,
     avgVideoDurationMinutes: 8.3,
-    avgViewsPerVideo: 673,
-    averageViewPercentage: 32.5,
+    avgViewsPerVideo: 3785,
+    averageViewPercentage: 13.7,
     avgWatchHoursPerVideo: 29.4,
   };
 }

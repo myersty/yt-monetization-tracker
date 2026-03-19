@@ -105,8 +105,8 @@ export default function VelocityCard({ daily, availableMetrics }: VelocityCardPr
       </div>
 
       {/* Sparkline */}
-      <div className="flex-1 min-h-[100px]">
-        <ResponsiveContainer width="100%" height="100%">
+      <div style={{ position: 'relative', zIndex: 3, width: '100%', height: '160px' }}>
+        <ResponsiveContainer width="100%" height={160}>
           <AreaChart data={metricData.data} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
             <defs>
               <linearGradient id={`sparkGrad-${activeTab}`} x1="0" y1="0" x2="0" y2="1">

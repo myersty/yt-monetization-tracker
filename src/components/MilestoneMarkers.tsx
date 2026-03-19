@@ -27,10 +27,25 @@ export default function MilestoneMarkers({ currentSubscribers, totalWatchHours }
   const getValue = (metric: 'subscribers' | 'watchhours') =>
     metric === 'subscribers' ? currentSubscribers : totalWatchHours;
 
-  // Find the next unachieved milestone
-  const nextMilestoneIndex = MILESTONES.findIndex(
-    m => getValue(m.metric) < m.threshold
-  );
+  // Sort milestones: completed first, then next (closest to completion), then future
+  const sorted = [...MILESTONES].map((m, i) => ({
+    ...m,
+    originalIndex: i,
+    current: getValue(m.metric),
+    achieved: getValue(m.metric) >= m.threshold,
+    progress: Math.min(getValue(m.metric) / m.threshold, 1),
+  })).sort((a, b) => {
+    // Completed first
+    if (a.achieved && !b.achieved) return -1;
+    if (!a.achieved && b.achieved) return 1;
+    // Among completed, original order
+    if (a.achieved && b.achieved) return a.originalIndex - b.originalIndex;
+    // Among incomplete, highest progress first
+    return b.progress - a.progress;
+  });
+
+  // The first non-achieved milestone is the "next" one
+  const nextIndex = sorted.findIndex(m => !m.achieved);
 
   return (
     <div className="card p-6">
@@ -39,11 +54,9 @@ export default function MilestoneMarkers({ currentSubscribers, totalWatchHours }
       </p>
 
       <div className="space-y-3">
-        {MILESTONES.map((milestone, i) => {
-          const current = getValue(milestone.metric);
-          const achieved = current >= milestone.threshold;
-          const isNext = i === nextMilestoneIndex;
-          const progress = Math.min(current / milestone.threshold, 1);
+        {sorted.map((milestone, i) => {
+          const { achieved, progress } = milestone;
+          const isNext = i === nextIndex;
 
           return (
             <div
