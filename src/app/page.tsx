@@ -7,6 +7,7 @@ import FileUpload from '@/components/FileUpload';
 import DashboardV2 from '@/components/DashboardV2';
 import { parseAllCSVs } from '@/lib/csv-parser';
 import { ParsedData } from '@/lib/types';
+import { useScrollReveal } from '@/lib/useScrollReveal';
 
 async function extractCSVsFromZip(file: File): Promise<File[]> {
   const zip = await JSZip.loadAsync(file);
@@ -66,6 +67,8 @@ export default function Home() {
   const [parsedData, setParsedData] = useState<ParsedData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useScrollReveal();
 
   const handleFilesSelected = async (files: File[]) => {
     setIsLoading(true);
@@ -186,17 +189,19 @@ export default function Home() {
       {/* ─── Features (3 cards) ──────────────────────────────────── */}
       <section className="v2-section">
         <div className="v2-container">
-          <span className="v2-badge">Features</span>
-          <h2 className="v2-section-h2">
-            Everything You Need to{' '}
-            <span className="v2-text-accent">Track Progress</span>
-          </h2>
-          <p className="v2-section-sub">
-            Three projection models, real-time analytics, and a what-if simulator
-            to plan your path to monetization.
-          </p>
+          <div className="v2-reveal">
+            <span className="v2-badge">Features</span>
+            <h2 className="v2-section-h2">
+              Everything You Need to{' '}
+              <span className="v2-text-accent">Track Progress</span>
+            </h2>
+            <p className="v2-section-sub">
+              Three projection models, real-time analytics, and a what-if simulator
+              to plan your path to monetization.
+            </p>
+          </div>
 
-          <div className="v2-features-grid">
+          <div className="v2-features-grid v2-reveal-stagger">
             {[
               {
                 icon: <ZapIcon className="w-6 h-6" />,
@@ -214,7 +219,7 @@ export default function Home() {
                 desc: 'Your data never leaves your browser. CSV files are parsed locally. OAuth tokens are encrypted end-to-end.',
               },
             ].map(({ icon, title, desc }) => (
-              <div key={title} className="v2-feature-card">
+              <div key={title} className="v2-feature-card v2-reveal-child">
                 <div className="v2-feature-icon">{icon}</div>
                 <h3 className="v2-feature-title">{title}</h3>
                 <p className="v2-feature-desc">{desc}</p>
@@ -227,15 +232,17 @@ export default function Home() {
       {/* ─── Connect / Upload ────────────────────────────────────── */}
       <section id="upload" className="v2-section">
         <div className="v2-container">
-          <span className="v2-badge">Get Started</span>
-          <h2 className="v2-section-h2">
-            Two Ways to{' '}
-            <span className="v2-text-accent">Get Your Data</span>
-          </h2>
+          <div className="v2-reveal">
+            <span className="v2-badge">Get Started</span>
+            <h2 className="v2-section-h2">
+              Two Ways to{' '}
+              <span className="v2-text-accent">Get Your Data</span>
+            </h2>
+          </div>
 
-          <div className="v2-options-grid">
+          <div className="v2-options-grid v2-reveal-stagger">
             {/* Option A: Connect */}
-            <div className="v2-option-card">
+            <div className="v2-option-card v2-reveal-child">
               <div className="v2-option-recommended">Recommended</div>
               <div className="v2-option-icon-wrap">
                 <YouTubeIcon className="w-8 h-8 text-[#FF0000]" />
@@ -256,7 +263,7 @@ export default function Home() {
             </div>
 
             {/* Option B: Upload */}
-            <div className="v2-option-card">
+            <div className="v2-option-card v2-reveal-child">
               <div className="v2-option-icon-wrap">
                 <LockIcon className="w-8 h-8 text-emerald-500" />
               </div>
@@ -278,13 +285,15 @@ export default function Home() {
       {/* ─── How-to Guide ────────────────────────────────────────── */}
       <section className="v2-section">
         <div className="v2-container v2-container-narrow">
-          <span className="v2-badge">How It Works</span>
-          <h2 className="v2-section-h2">
-            Export Your Data in{' '}
-            <span className="v2-text-accent">60 Seconds</span>
-          </h2>
+          <div className="v2-reveal">
+            <span className="v2-badge">How It Works</span>
+            <h2 className="v2-section-h2">
+              Export Your Data in{' '}
+              <span className="v2-text-accent">60 Seconds</span>
+            </h2>
+          </div>
 
-          <div className="v2-steps">
+          <div className="v2-steps v2-reveal-stagger">
             {[
               'Go to YouTube Studio \u2192 Analytics \u2192 click "Advanced Mode"',
               'Set Breakdown to "Date" (click the dropdown, search for "Date")',
@@ -293,7 +302,7 @@ export default function Home() {
               'Click the download icon \u2192 Comma-separated values (.csv)',
               'Drop the downloaded .zip file above (no need to unzip!)',
             ].map((text, i) => (
-              <div key={i} className="v2-step">
+              <div key={i} className="v2-step v2-reveal-child">
                 <div className="v2-step-number">{i + 1}</div>
                 <p className="v2-step-text">{text}</p>
               </div>
@@ -309,7 +318,7 @@ export default function Home() {
       {/* ─── CTA Banner ──────────────────────────────────────────── */}
       <section className="v2-section">
         <div className="v2-container">
-          <div className="v2-cta-banner">
+          <div className="v2-cta-banner v2-reveal-scale">
             <h2 className="v2-cta-h2">
               Start Tracking Your{' '}
               <span className="v2-text-accent">Monetization</span>{' '}
@@ -330,7 +339,7 @@ export default function Home() {
       </section>
 
       {/* ─── Footer ──────────────────────────────────────────────── */}
-      <footer className="v2-footer">
+      <footer className="v2-footer v2-reveal">
         <div className="v2-container">
           <div className="v2-footer-inner">
             <div className="v2-footer-brand">

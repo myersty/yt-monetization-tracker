@@ -923,6 +923,148 @@ h2 {
   color: rgba(255, 255, 255, 0.7);
 }
 
+/* ─── V2 Animations ────────────────────────────────────────────── */
+
+/* Hero staggered fade-up on page load */
+@keyframes v2-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes v2-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.v2-hero .v2-badge {
+  opacity: 0;
+  animation: v2-fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards;
+}
+
+.v2-hero .v2-hero-h1 {
+  opacity: 0;
+  animation: v2-fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
+}
+
+.v2-hero .v2-hero-sub {
+  opacity: 0;
+  animation: v2-fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.35s forwards;
+}
+
+.v2-hero .v2-hero-cta-bar {
+  opacity: 0;
+  animation: v2-scale-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.5s forwards;
+}
+
+.v2-hero .v2-hero-hint {
+  opacity: 0;
+  animation: v2-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.6s forwards;
+}
+
+/* Scroll reveal — elements start hidden, animate when .v2-visible is added */
+.v2-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.v2-reveal.v2-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Staggered children — feature cards, option cards, steps */
+.v2-reveal-stagger > .v2-reveal-child {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.v2-reveal-stagger.v2-visible > .v2-reveal-child:nth-child(1) { transition-delay: 0s; }
+.v2-reveal-stagger.v2-visible > .v2-reveal-child:nth-child(2) { transition-delay: 0.12s; }
+.v2-reveal-stagger.v2-visible > .v2-reveal-child:nth-child(3) { transition-delay: 0.24s; }
+.v2-reveal-stagger.v2-visible > .v2-reveal-child:nth-child(4) { transition-delay: 0.36s; }
+.v2-reveal-stagger.v2-visible > .v2-reveal-child:nth-child(5) { transition-delay: 0.48s; }
+.v2-reveal-stagger.v2-visible > .v2-reveal-child:nth-child(6) { transition-delay: 0.6s; }
+
+.v2-reveal-stagger.v2-visible > .v2-reveal-child {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Step number count-in */
+@keyframes v2-step-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.v2-reveal-stagger.v2-visible .v2-step-number {
+  animation: v2-step-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.v2-reveal-stagger.v2-visible .v2-reveal-child:nth-child(1) .v2-step-number { animation-delay: 0.05s; }
+.v2-reveal-stagger.v2-visible .v2-reveal-child:nth-child(2) .v2-step-number { animation-delay: 0.17s; }
+.v2-reveal-stagger.v2-visible .v2-reveal-child:nth-child(3) .v2-step-number { animation-delay: 0.29s; }
+.v2-reveal-stagger.v2-visible .v2-reveal-child:nth-child(4) .v2-step-number { animation-delay: 0.41s; }
+.v2-reveal-stagger.v2-visible .v2-reveal-child:nth-child(5) .v2-step-number { animation-delay: 0.53s; }
+.v2-reveal-stagger.v2-visible .v2-reveal-child:nth-child(6) .v2-step-number { animation-delay: 0.65s; }
+
+/* CTA banner special entrance */
+.v2-reveal-scale {
+  opacity: 0;
+  transform: scale(0.97);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.v2-reveal-scale.v2-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .v2-hero .v2-badge,
+  .v2-hero .v2-hero-h1,
+  .v2-hero .v2-hero-sub,
+  .v2-hero .v2-hero-cta-bar,
+  .v2-hero .v2-hero-hint {
+    opacity: 1;
+    animation: none;
+    transform: none;
+  }
+  .v2-reveal,
+  .v2-reveal-scale,
+  .v2-reveal-stagger > .v2-reveal-child {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 /* ─── V2 Responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .v2-nav {
