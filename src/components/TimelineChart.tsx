@@ -198,7 +198,7 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
   }, [weeksToGoalData, timeRange]);
 
   // Show projections only for 1Y and All
-  const showProjections = timeRange === '1Y' || timeRange === 'All';
+  const showProjections = true; // Always show projections regardless of time range
 
   // Format dates for display
   const formatDate = (dateStr: string) => {
