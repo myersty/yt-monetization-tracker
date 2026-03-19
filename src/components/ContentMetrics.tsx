@@ -35,17 +35,42 @@ export default function ContentMetrics({
   const avgSubsPerWeek = totalNetSubs90 / numWeeks;
   const avgViewsPerDay = totalViews90 / Math.max(last90.length, 1);
 
+  // Compare to previous 90 days for trend
+  const prev90 = daily.slice(-180, -90);
+  const prevNumWeeks = Math.max(prev90.length / 7, 1);
+  const prevSubsPerWeek = prev90.length > 0
+    ? prev90.reduce((sum, d) => sum + ((d.subscribersGained || 0) - Math.abs(d.subscribersLost || 0)), 0) / prevNumWeeks
+    : 0;
+  const prevWatchHoursPerWeek = prev90.length > 0
+    ? prev90.reduce((sum, d) => sum + (d.watchTimeHours || 0), 0) / prevNumWeeks
+    : 0;
+
+  const subsTrend = prevSubsPerWeek > 0
+    ? Math.round(((avgSubsPerWeek - prevSubsPerWeek) / prevSubsPerWeek) * 100)
+    : null;
+  const hoursTrend = prevWatchHoursPerWeek > 0
+    ? Math.round(((avgWatchHoursPerWeek - prevWatchHoursPerWeek) / prevWatchHoursPerWeek) * 100)
+    : null;
+
   // Path to monetization calculations
   const subsNeeded = Math.max(SUBSCRIBER_GOAL - currentSubscribers, 0);
   const hoursNeeded = Math.max(WATCH_HOURS_GOAL - totalWatchTimeHours, 0);
   const isEligible = subsNeeded === 0 && hoursNeeded === 0;
 
-  // Weeks at current pace (based on 90-day averages)
+  const subsProgress = Math.min(currentSubscribers / SUBSCRIBER_GOAL, 1);
+  const hoursProgress = Math.min(totalWatchTimeHours / WATCH_HOURS_GOAL, 1);
+
+  // Weeks at current pace
   const weeksForSubs = avgSubsPerWeek > 0 ? Math.ceil(subsNeeded / avgSubsPerWeek) : null;
   const weeksForHours = avgWatchHoursPerWeek > 0 ? Math.ceil(hoursNeeded / avgWatchHoursPerWeek) : null;
   const weeksToMonetization = weeksForSubs !== null && weeksForHours !== null
     ? Math.max(weeksForSubs, weeksForHours)
     : weeksForSubs ?? weeksForHours;
+
+  // Estimated date
+  const estimatedDate = weeksToMonetization !== null && weeksToMonetization > 0
+    ? new Date(Date.now() + weeksToMonetization * 7 * 24 * 60 * 60 * 1000)
+    : null;
 
   // How far above thresholds
   const subsMultiplier = currentSubscribers / SUBSCRIBER_GOAL;
@@ -55,30 +80,37 @@ export default function ContentMetrics({
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Card 1: Content Performance */}
       <div className="card ring-base ring-tr p-6">
-        <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-4">
+        <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-5">
           Content Performance (Last 90 Days)
         </p>
         <div className="space-y-4">
           <MetricRow
-            label="Avg Watch Hours / Week"
+            label="Watch Hours / Week"
             value={avgWatchHoursPerWeek < 1 ? avgWatchHoursPerWeek.toFixed(2) : Math.round(avgWatchHoursPerWeek).toLocaleString()}
             sublabel={`${Math.round(totalWatchHours90).toLocaleString()} total hours`}
+            trend={hoursTrend}
+            context={avgWatchHoursPerWeek > 0
+              ? `Need ${Math.round(WATCH_HOURS_GOAL / 52)} hrs/wk to hit 4K in a year`
+              : undefined}
           />
           <MetricRow
-            label="Avg Subscribers / Week"
+            label="Subscribers / Week"
             value={avgSubsPerWeek < 1 ? avgSubsPerWeek.toFixed(2) : Math.round(avgSubsPerWeek).toLocaleString()}
             sublabel={`${totalNetSubs90 >= 0 ? '+' : ''}${totalNetSubs90.toLocaleString()} net`}
-            trend={avgSubsPerWeek > 0 ? 'up' : avgSubsPerWeek < 0 ? 'down' : 'neutral'}
+            trend={subsTrend}
+            context={weeksForSubs !== null && weeksForSubs > 0
+              ? `At this pace → 1K subs in ~${weeksForSubs} weeks`
+              : subsNeeded === 0 ? '✓ Subscriber goal reached' : undefined}
           />
           <MetricRow
-            label="Avg Views / Day"
+            label="Views / Day"
             value={avgViewsPerDay < 1 ? avgViewsPerDay.toFixed(2) : Math.round(avgViewsPerDay).toLocaleString()}
             sublabel={`${totalViews90.toLocaleString()} total views`}
           />
           {postingCadenceDays !== undefined && (
             <MetricRow
               label="Posting Cadence"
-              value={`1 video every ${postingCadenceDays.toFixed(1)} days`}
+              value={`Every ${postingCadenceDays.toFixed(1)} days`}
               sublabel={`${videosLast90Days ?? 0} videos in last 90 days`}
             />
           )}
@@ -87,7 +119,7 @@ export default function ContentMetrics({
 
       {/* Card 2: Path to Monetization */}
       <div className="card ring-base ring-tl p-6">
-        <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-4">
+        <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-5">
           Path to Monetization
         </p>
 
@@ -106,7 +138,7 @@ export default function ContentMetrics({
                 <p className="text-2xl font-bold font-[family-name:var(--font-display)] text-accent-gradient">
                   {Math.round(subsMultiplier)}x
                 </p>
-                <p className="text-xs text-[var(--gray-600)] mt-1">
+                <p className="text-xs text-[var(--gray-500)] mt-1">
                   above subscriber threshold
                 </p>
               </div>
@@ -114,48 +146,76 @@ export default function ContentMetrics({
                 <p className="text-2xl font-bold font-[family-name:var(--font-display)] text-[#1565C0]">
                   {Math.round(hoursMultiplier)}x
                 </p>
-                <p className="text-xs text-[var(--gray-600)] mt-1">
+                <p className="text-xs text-[var(--gray-500)] mt-1">
                   above watch hour threshold
                 </p>
               </div>
             </div>
           </div>
         ) : (
-          <div className="space-y-3">
-            {subsNeeded > 0 && (
-              <PathItem
-                icon="person"
-                text={`${subsNeeded.toLocaleString()} more subscribers needed`}
+          <div className="space-y-5">
+            {/* Hero: Estimated timeline */}
+            {weeksToMonetization !== null && weeksToMonetization > 0 && (
+              <div className="text-center py-3 px-4 rounded-xl bg-[var(--gray-50)] border border-[var(--gray-200)]">
+                <p className="text-3xl font-bold font-[family-name:var(--font-display)] text-accent-gradient">
+                  ~{weeksToMonetization} weeks
+                </p>
+                {estimatedDate && (
+                  <p className="text-sm text-[var(--gray-600)] mt-1">
+                    Target: {estimatedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Progress bars */}
+            <div className="space-y-3">
+              <ProgressRow
+                label="Subscribers"
+                current={currentSubscribers}
+                goal={SUBSCRIBER_GOAL}
+                progress={subsProgress}
                 color="var(--gold)"
               />
-            )}
-            {hoursNeeded > 0 && (
-              <PathItem
-                icon="clock"
-                text={`${Math.round(hoursNeeded).toLocaleString()} more watch hours needed`}
+              <ProgressRow
+                label="Watch Hours"
+                current={Math.round(totalWatchTimeHours)}
+                goal={WATCH_HOURS_GOAL}
+                progress={hoursProgress}
                 color="#1565C0"
               />
-            )}
-            {weeksToMonetization !== null && weeksToMonetization > 0 && (
-              <PathItem
-                icon="calendar"
-                text={`~${weeksToMonetization} week${weeksToMonetization !== 1 ? 's' : ''} at current pace`}
-                color="var(--gray-600)"
-              />
-            )}
+            </div>
+
+            {/* What's left */}
+            <div className="flex gap-3 text-xs text-[var(--gray-500)]">
+              {subsNeeded > 0 && (
+                <span className="flex-1 text-center py-2 rounded-lg bg-[var(--gray-50)]">
+                  {subsNeeded.toLocaleString()} subs to go
+                </span>
+              )}
+              {hoursNeeded > 0 && (
+                <span className="flex-1 text-center py-2 rounded-lg bg-[var(--gray-50)]">
+                  {Math.round(hoursNeeded).toLocaleString()} hours to go
+                </span>
+              )}
+            </div>
+
+            {/* Achieved thresholds */}
             {subsNeeded === 0 && (
-              <PathItem
-                icon="check"
-                text="Subscriber threshold met!"
-                color="#2E7D32"
-              />
+              <div className="flex items-center gap-2 text-sm text-[#2E7D32] bg-[#2E7D32]/10 px-3 py-2 rounded-lg">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Subscriber threshold met!
+              </div>
             )}
             {hoursNeeded === 0 && (
-              <PathItem
-                icon="check"
-                text="Watch hours threshold met!"
-                color="#2E7D32"
-              />
+              <div className="flex items-center gap-2 text-sm text-[#2E7D32] bg-[#2E7D32]/10 px-3 py-2 rounded-lg">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Watch hours threshold met!
+              </div>
             )}
           </div>
         )}
@@ -169,73 +229,80 @@ function MetricRow({
   value,
   sublabel,
   trend,
+  context,
 }: {
   label: string;
   value: string;
   sublabel: string;
-  trend?: 'up' | 'down' | 'neutral';
+  trend?: number | null;
+  context?: string;
 }) {
   return (
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm text-[var(--gray-700)]">{label}</p>
-        <p className="text-xs text-[var(--gray-500)]">{sublabel}</p>
+    <div>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-[var(--gray-700)]">{label}</p>
+          <p className="text-xs text-[var(--gray-500)]">{sublabel}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <p className="font-[family-name:var(--font-display)] font-bold text-lg">
+            {value}
+          </p>
+          {trend !== null && trend !== undefined && (
+            <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
+              trend > 0
+                ? 'text-[#2E7D32] bg-[#2E7D32]/10'
+                : trend < 0
+                  ? 'text-[#c0392b] bg-[#c0392b]/10'
+                  : 'text-[var(--gray-500)] bg-[var(--gray-100)]'
+            }`}>
+              {trend > 0 ? '↑' : trend < 0 ? '↓' : '→'} {Math.abs(trend)}%
+            </span>
+          )}
+        </div>
       </div>
-      <div className="flex items-center gap-2">
-        <p className="font-[family-name:var(--font-display)] font-bold text-lg">
-          {value}
-        </p>
-        {trend === 'up' && (
-          <svg className="w-4 h-4 text-[#2E7D32]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M7 17l5-5 5 5M7 7l5-5 5 5" />
-          </svg>
-        )}
-        {trend === 'down' && (
-          <svg className="w-4 h-4 text-[#c0392b]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17 7l-5 5-5-5M17 17l-5 5-5-5" />
-          </svg>
-        )}
-      </div>
+      {context && (
+        <p className="text-xs text-[var(--gray-400)] mt-1 italic">{context}</p>
+      )}
     </div>
   );
 }
 
-function PathItem({
-  icon,
-  text,
+function ProgressRow({
+  label,
+  current,
+  goal,
+  progress,
   color,
 }: {
-  icon: 'person' | 'clock' | 'calendar' | 'check';
-  text: string;
+  label: string;
+  current: number;
+  goal: number;
+  progress: number;
   color: string;
 }) {
-  const icons = {
-    person: (
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-      </svg>
-    ),
-    clock: (
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-    calendar: (
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-      </svg>
-    ),
-    check: (
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-      </svg>
-    ),
-  };
-
+  const pct = Math.round(progress * 100);
   return (
-    <div className="flex items-center gap-3 py-2 px-3 rounded-lg bg-[var(--gray-50)]">
-      <span style={{ color }} className="flex-shrink-0">{icons[icon]}</span>
-      <p className="text-sm text-[var(--gray-700)]">{text}</p>
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-sm text-[var(--gray-700)]">{label}</span>
+        <span className="text-xs text-[var(--gray-500)]">
+          <span className="font-semibold text-[var(--foreground)]">{current.toLocaleString()}</span>
+          {' / '}
+          {goal.toLocaleString()}
+          <span className="ml-1.5 text-[var(--gray-400)]">({pct}%)</span>
+        </span>
+      </div>
+      <div className="w-full h-2 rounded-full bg-[var(--gray-100)] overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-700 ease-in-out"
+          style={{
+            width: `${pct}%`,
+            background: color,
+            opacity: 0.85,
+          }}
+        />
+      </div>
     </div>
   );
 }
