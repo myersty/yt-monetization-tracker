@@ -128,5 +128,9 @@ export function generateMockData(): ParsedData {
     channelThumbnail: '',
     videosLast90Days: 16,
     postingCadenceDays: 5.5,
+    avgVideoDurationMinutes: 8.3,
+    avgViewsPerVideo: 673,
+    averageViewPercentage: 32.5,
+    avgWatchHoursPerVideo: 29.4,
   };
 }

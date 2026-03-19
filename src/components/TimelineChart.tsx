@@ -408,8 +408,8 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                     watchTimeHours: 'Watch Hours',
                     current_subs: 'Current Pace',
                     current_hours: 'Current Pace',
-                    whatif_subs: 'What-If',
-                    whatif_hours: 'What-If',
+                    whatif_subs: 'What-If (adjust below)',
+                    whatif_hours: 'What-If (adjust below)',
                   };
                   const numVal = typeof value === 'number' ? value : Number(value) || 0;
                   const nameStr = String(name);

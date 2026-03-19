@@ -36,6 +36,14 @@ export type ParsedData = {
   videosLast90Days?: number;
   /** Average days between posts based on last 90 days (API only) */
   postingCadenceDays?: number;
+  /** Average video duration in minutes (long-form only, last 90 days) */
+  avgVideoDurationMinutes?: number;
+  /** Average views per video (long-form only, last 90 days) */
+  avgViewsPerVideo?: number;
+  /** Average view percentage (0-100) from YouTube Analytics */
+  averageViewPercentage?: number;
+  /** Computed retention-based watch hours per video */
+  avgWatchHoursPerVideo?: number;
 };
 
 export type CSVFileType = 'subscribers' | 'watchtime' | 'views' | 'unknown';

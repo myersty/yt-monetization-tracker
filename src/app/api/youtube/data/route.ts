@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getValidAccessToken } from '@/lib/auth';
-import { getChannelInfo, getDailyAnalytics, getWatchTimeByContentType, getRecentVideoCount } from '@/lib/youtube-api';
+import { getChannelInfo, getDailyAnalytics, getWatchTimeByContentType, getRecentVideoCount, getAverageRetention, getRecentVideoDetails } from '@/lib/youtube-api';
 import type { DailyMetrics, ParsedData } from '@/lib/types';
 
 function formatDate(date: Date): string {
@@ -42,8 +42,16 @@ export async function GET() {
       getWatchTimeByContentType(accessToken, watchTimeStartStr, endStr).catch(() => null),
     ]);
 
-    // Fetch recent video count for posting cadence
-    const recentVideos = await getRecentVideoCount(accessToken, channelInfo.channelId, 90).catch(() => null);
+    // Fetch recent video details, retention, and posting cadence in parallel
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    const ninetyDaysAgoStr = formatDate(ninetyDaysAgo);
+
+    const [recentVideos, retentionData, videoDetails] = await Promise.all([
+      getRecentVideoCount(accessToken, channelInfo.channelId, 90).catch(() => null),
+      getAverageRetention(accessToken, ninetyDaysAgoStr, endStr).catch(() => null),
+      getRecentVideoDetails(accessToken, channelInfo.channelId, 90).catch(() => null),
+    ]);
 
     // Filter out leading days with zero activity (before channel had any real data)
     let firstActiveIndex = 0;
@@ -120,7 +128,16 @@ export async function GET() {
       postingCadenceDays: recentVideos && recentVideos.totalVideos > 0
         ? 90 / recentVideos.totalVideos
         : undefined,
+      avgVideoDurationMinutes: videoDetails?.avgDurationMinutes,
+      avgViewsPerVideo: videoDetails?.avgViewsPerVideo,
+      averageViewPercentage: retentionData?.averageViewPercentage,
     };
+
+    // Compute average watch hours per video from real data
+    if (parsedData.avgVideoDurationMinutes && parsedData.avgViewsPerVideo && parsedData.averageViewPercentage) {
+      parsedData.avgWatchHoursPerVideo =
+        (parsedData.avgVideoDurationMinutes * parsedData.avgViewsPerVideo * (parsedData.averageViewPercentage / 100)) / 60;
+    }
 
     // Add shorts breakdown if available
     if (shortsData) {

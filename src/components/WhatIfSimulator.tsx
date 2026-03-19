@@ -9,6 +9,9 @@ type WhatIfSimulatorProps = {
   currentSubsPerDay: number;
   currentHoursPerDay: number;
   postingCadenceDays?: number;
+  avgVideoDurationMinutes?: number;
+  avgViewsPerVideo?: number;
+  averageViewPercentage?: number;
   onRatesChange?: (rates: WhatIfRates) => void;
 };
 
@@ -18,20 +21,36 @@ export default function WhatIfSimulator({
   currentSubsPerDay,
   currentHoursPerDay,
   postingCadenceDays,
+  avgVideoDurationMinutes,
+  avgViewsPerVideo: actualAvgViews,
+  averageViewPercentage,
   onRatesChange,
 }: WhatIfSimulatorProps) {
   const actualCadence = postingCadenceDays ?? 7;
+  const actualDuration = avgVideoDurationMinutes ?? 10;
+  const actualViews = actualAvgViews ?? 500;
+  // Use real retention from YouTube Analytics, or calculate from data, or fall back to 40%
+  const retentionRate = averageViewPercentage ? averageViewPercentage / 100 : 0.4;
+
   const [daysBetweenPosts, setDaysBetweenPosts] = useState(Math.round(actualCadence));
-  const [avgVideoMinutes, setAvgVideoMinutes] = useState(10);
-  const [avgViewsPerVideo, setAvgViewsPerVideo] = useState(500);
+  const [avgVideoMinutes, setAvgVideoMinutes] = useState(Math.round(actualDuration));
+  const [avgViewsPerVideo, setAvgViewsPerVideo] = useState(actualViews);
+
+  // Update defaults when real data arrives
+  useEffect(() => {
+    if (avgVideoDurationMinutes) setAvgVideoMinutes(Math.round(avgVideoDurationMinutes));
+  }, [avgVideoDurationMinutes]);
+
+  useEffect(() => {
+    if (actualAvgViews) setAvgViewsPerVideo(actualAvgViews);
+  }, [actualAvgViews]);
 
   const projection = useMemo(() => {
     // Convert days between posts to videos per week
     const videosPerWeek = 7 / daysBetweenPosts;
 
-    // Rough estimates:
-    // Average view duration ~ 40% of video length for good content
-    const avgWatchMinutesPerView = avgVideoMinutes * 0.4;
+    // Use real retention rate from YouTube Analytics
+    const avgWatchMinutesPerView = avgVideoMinutes * retentionRate;
     const weeklyWatchHours = (videosPerWeek * avgViewsPerVideo * avgWatchMinutesPerView) / 60;
     const dailyWatchHours = weeklyWatchHours / 7;
 
@@ -64,7 +83,7 @@ export default function WhatIfSimulator({
       weeklyWatchHours,
       weeklyNewSubs,
     };
-  }, [daysBetweenPosts, avgVideoMinutes, avgViewsPerVideo, currentSubscribers, totalWatchHours]);
+  }, [daysBetweenPosts, avgVideoMinutes, avgViewsPerVideo, retentionRate, currentSubscribers, totalWatchHours]);
 
   // Report rates to parent for timeline integration
   useEffect(() => {
@@ -85,8 +104,8 @@ export default function WhatIfSimulator({
         <button
           onClick={() => {
             setDaysBetweenPosts(Math.round(actualCadence));
-            setAvgVideoMinutes(10);
-            setAvgViewsPerVideo(500);
+            setAvgVideoMinutes(Math.round(actualDuration));
+            setAvgViewsPerVideo(actualViews);
           }}
           className="text-xs text-[var(--gray-500)] hover:text-[var(--gold)] transition-colors flex items-center gap-1"
           title="Reset sliders to defaults"
@@ -152,6 +171,11 @@ export default function WhatIfSimulator({
             <span>3 min</span>
             <span>60 min</span>
           </div>
+          {avgVideoDurationMinutes !== undefined && (
+            <p className="text-[10px] text-[var(--gray-500)] mt-1">
+              Your videos average {avgVideoDurationMinutes.toFixed(1)} min
+            </p>
+          )}
         </div>
 
         {/* Avg views per video */}
@@ -175,8 +199,22 @@ export default function WhatIfSimulator({
             <span>50</span>
             <span>10,000</span>
           </div>
+          {actualAvgViews !== undefined && (
+            <p className="text-[10px] text-[var(--gray-500)] mt-1">
+              Your videos average {actualAvgViews.toLocaleString()} views
+            </p>
+          )}
         </div>
       </div>
+
+      {/* Retention info badge */}
+      {averageViewPercentage !== undefined && (
+        <div className="mt-4 px-3 py-2 rounded-lg bg-[var(--gray-50)] border border-white/4">
+          <p className="text-[10px] text-[var(--gray-500)]">
+            Using your real average view percentage: <span className="text-[var(--gold)] font-semibold">{averageViewPercentage.toFixed(1)}%</span>
+          </p>
+        </div>
+      )}
 
       {/* Result */}
       <div className="mt-6 pt-5 border-t border-[var(--gray-200)]">

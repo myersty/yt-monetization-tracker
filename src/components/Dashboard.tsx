@@ -10,6 +10,7 @@ import VelocityCard from './VelocitySparkline';
 import MilestoneMarkers from './MilestoneMarkers';
 import WhatIfSimulator from './WhatIfSimulator';
 import ContentMetrics from './ContentMetrics';
+import RecommendationsCard from './RecommendationsCard';
 
 type DashboardProps = {
   data: ParsedData;
@@ -161,6 +162,9 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
             currentSubsPerDay={currentSubsPerDay}
             currentHoursPerDay={currentHoursPerDay}
             postingCadenceDays={data.postingCadenceDays}
+            avgVideoDurationMinutes={data.avgVideoDurationMinutes}
+            avgViewsPerVideo={data.avgViewsPerVideo}
+            averageViewPercentage={data.averageViewPercentage}
             onRatesChange={setWhatIfRates}
           />
         </div>
@@ -214,6 +218,18 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
             </div>
           )}
         </div>
+
+        {/* Personalized Recommendations */}
+        <RecommendationsCard
+          avgVideoDurationMinutes={data.avgVideoDurationMinutes}
+          avgViewsPerVideo={data.avgViewsPerVideo}
+          averageViewPercentage={data.averageViewPercentage}
+          postingCadenceDays={data.postingCadenceDays}
+          currentSubscribers={data.totals.currentSubscribers}
+          totalWatchHours={data.totals.totalWatchTimeHours}
+          avgWatchHoursPerVideo={data.avgWatchHoursPerVideo}
+          videosLast90Days={data.videosLast90Days}
+        />
 
         {/* CTA Banner */}
         <div className="cta-banner mb-8">
