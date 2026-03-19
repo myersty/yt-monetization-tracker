@@ -395,6 +395,29 @@ h2 {
   box-shadow: var(--card-shadow) !important;
 }
 
+/* ─── CHART ZOOM TRANSITIONS ─────────────────────────────────────────── */
+
+@keyframes chart-zoom-pulse {
+  0%   { transform: scale(1); opacity: 1; }
+  30%  { transform: scale(0.96); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.chart-zoom-transition {
+  animation: chart-zoom-pulse 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.chart-zoom-idle {
+  transform: scale(1);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-zoom-transition {
+    animation: none;
+  }
+}
+
 /* ─── SCROLLBAR ───────────────────────────────────────────────────────── */
 
 ::-webkit-scrollbar {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   AreaChart,
   Area,
@@ -197,14 +197,86 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
     return weeksToGoalData.filter(d => d.date >= cutoffStr);
   }, [weeksToGoalData, timeRange]);
 
-  // Show projections only for 1Y and All
-  const showProjections = true; // Always show projections regardless of time range
+  // Always show projections regardless of time range
+  const showProjections = true;
 
-  // Format dates for display
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
+  // --- ZOOM STATE: trigger CSS pulse on range/view change ---
+  const [animating, setAnimating] = useState(false);
+  const prevRange = useRef(timeRange);
+  const prevView = useRef(view);
+
+  useEffect(() => {
+    if (prevRange.current !== timeRange || prevView.current !== view) {
+      prevRange.current = timeRange;
+      prevView.current = view;
+      setAnimating(true);
+      const timer = setTimeout(() => setAnimating(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [timeRange, view]);
+
+  // --- DYNAMIC Y-AXIS: scale to fit visible data ---
+  const yDomain = useMemo((): [number, number] => {
+    if (view === 'weekstogoal') return [0, 100]; // handled separately
+    const values = filteredData.map(d => {
+      const val = Number(d[dataKey]) || 0;
+      const projKey = view === 'subscribers' ? 'current_subs' : 'current_hours';
+      const whatifKey = view === 'subscribers' ? 'whatif_subs' : 'whatif_hours';
+      const proj = Number(d[projKey]) || 0;
+      const whatif = Number(d[whatifKey]) || 0;
+      return Math.max(val, proj, whatif);
+    });
+    const maxVal = Math.max(...values, goal);
+    const headroom = maxVal * 0.15;
+    const ceiling = Math.ceil((maxVal + headroom) / 100) * 100;
+    return [0, Math.max(ceiling, 200)]; // minimum 200 so chart isn't too tight
+  }, [filteredData, dataKey, view, goal]);
+
+  // --- RANGE-AWARE X-AXIS FORMATTING ---
+  const formatTickByRange = useMemo(() => {
+    return (ts: number) => {
+      const d = new Date(ts);
+      switch (timeRange) {
+        case '1M':
+        case '3M':
+          return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        case '6M':
+        case '1Y':
+          return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+        case 'All':
+          return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+      }
+    };
+  }, [timeRange]);
+
+  const formatDateByRange = useMemo(() => {
+    return (dateStr: string) => {
+      const d = new Date(dateStr);
+      switch (timeRange) {
+        case '1M':
+        case '3M':
+          return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        case '6M':
+        case '1Y':
+          return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+        case 'All':
+          return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+      }
+    };
+  }, [timeRange]);
+
+  const tickGap = timeRange === '1M' ? 40 : timeRange === '3M' ? 50 : 70;
+
+  // --- GRID DENSITY PER RANGE ---
+  const gridConfig = useMemo(() => {
+    switch (timeRange) {
+      case '1M':  return { vertical: true, horizontal: true, dash: '3 3' };
+      case '3M':  return { vertical: true, horizontal: true, dash: '4 4' };
+      case '6M':  return { vertical: false, horizontal: true, dash: '6 4' };
+      case '1Y':  return { vertical: false, horizontal: true, dash: '6 4' };
+      case 'All': return { vertical: false, horizontal: true, dash: '8 6' };
+    }
+  }, [timeRange]);
 
   const formatValue = (val: number) => {
     if (val >= 1000) return `${(val / 1000).toFixed(1)}k`;
@@ -280,6 +352,7 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
         </div>
       </div>
 
+      <div className={animating ? 'chart-zoom-transition' : 'chart-zoom-idle'} style={{ willChange: 'transform' }}>
       {view === 'weekstogoal' ? (
         alreadyEligible ? (
           <div className="flex items-center justify-center h-[350px]">
@@ -301,13 +374,13 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
           <>
             <ResponsiveContainer width="100%" height={350}>
               <LineChart data={filteredWeeksData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-200)" />
+                <CartesianGrid strokeDasharray={gridConfig.dash} stroke="var(--gray-200)" vertical={gridConfig.vertical} horizontal={gridConfig.horizontal} />
                 <XAxis
                   dataKey="date"
-                  tickFormatter={formatDate}
+                  tickFormatter={formatDateByRange}
                   tick={{ fontSize: 11, fill: 'var(--gray-600)' }}
                   interval="preserveStartEnd"
-                  minTickGap={60}
+                  minTickGap={tickGap}
                 />
                 <YAxis
                   tickFormatter={(val) => Math.round(val).toString()}
@@ -340,7 +413,8 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                   strokeWidth={2}
                   dot={{ r: 2, fill: 'var(--gold)' }}
                   name="weeksToSubGoal"
-                  animationDuration={500}
+                  animationDuration={700}
+                  animationEasing="ease-in-out"
                   connectNulls
                 />
                 <Line
@@ -350,7 +424,8 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                   strokeWidth={2}
                   dot={{ r: 2, fill: '#1565C0' }}
                   name="weeksToHoursGoal"
-                  animationDuration={500}
+                  animationDuration={700}
+                  animationEasing="ease-in-out"
                   connectNulls
                 />
               </LineChart>
@@ -381,21 +456,21 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                   <stop offset="95%" stopColor="#1565C0" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-200)" />
+              <CartesianGrid strokeDasharray={gridConfig.dash} stroke="var(--gray-200)" vertical={gridConfig.vertical} horizontal={gridConfig.horizontal} />
               <XAxis
                 dataKey="timestamp"
                 type="number"
                 scale="time"
                 domain={['dataMin', 'dataMax']}
-                tickFormatter={(ts) => formatDate(new Date(ts).toISOString().split('T')[0])}
+                tickFormatter={formatTickByRange}
                 tick={{ fontSize: 11, fill: 'var(--gray-600)' }}
-                minTickGap={60}
+                minTickGap={tickGap}
               />
               <YAxis
                 tickFormatter={formatValue}
                 tick={{ fontSize: 11, fill: 'var(--gray-600)' }}
                 width={50}
-                domain={[0, goal * 2]}
+                domain={yDomain}
                 allowDataOverflow={true}
                 label={{
                   value: yAxisLabel,
@@ -453,10 +528,11 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                 fill={view === 'subscribers' ? 'url(#gradientGold)' : 'url(#gradientBlue)'}
                 strokeWidth={2}
                 dot={false}
-                animationDuration={500}
+                animationDuration={700}
+                animationEasing="ease-in-out"
               />
 
-              {/* Projection lines (only for 1Y and All) */}
+              {/* Projection lines */}
               {showProjections && (
                 <>
                   <Area
@@ -468,7 +544,8 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                     strokeDasharray="6 3"
                     dot={false}
                     name={view === 'subscribers' ? 'current_subs' : 'current_hours'}
-                    animationDuration={500}
+                    animationDuration={700}
+                    animationEasing="ease-in-out"
                   />
                   {/* What-If scenario line */}
                   {filteredData.some(d => d[view === 'subscribers' ? 'whatif_subs' : 'whatif_hours'] !== undefined) && (
@@ -481,7 +558,8 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                       strokeDasharray="4 2"
                       dot={false}
                       name={view === 'subscribers' ? 'whatif_subs' : 'whatif_hours'}
-                      animationDuration={300}
+                      animationDuration={500}
+                      animationEasing="ease-in-out"
                     />
                   )}
                 </>
@@ -489,7 +567,7 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
             </AreaChart>
           </ResponsiveContainer>
 
-          {/* Projection legend (only when projections are visible) */}
+          {/* Projection legend */}
           {showProjections && (
             <div className="flex justify-center gap-6 mt-4 text-xs text-[var(--gray-600)]">
               <span className="flex items-center gap-1.5">
@@ -506,6 +584,7 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
           )}
         </>
       )}
+      </div>
     </div>
   );
 }
