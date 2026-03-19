@@ -204,10 +204,10 @@ export default function PrivacyPolicy() {
               If you have questions about this privacy policy or how your data is handled,
               contact us at:{' '}
               <a
-                href="mailto:tyroneleemyers@gmail.com"
+                href="mailto:ty@tymyersmedia.com"
                 className="text-[var(--gold)] hover:underline"
               >
-                tyroneleemyers@gmail.com
+                ty@tymyersmedia.com
               </a>
             </p>
           </section>
