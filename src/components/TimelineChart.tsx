@@ -621,7 +621,7 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                       strokeDasharray="4 2"
                       dot={false}
                       name={view === 'subscribers' ? 'whatif_subs' : 'whatif_hours'}
-                      animationDuration={500}
+                      animationDuration={700}
                       animationEasing="ease-in-out"
                     />
                   )}
