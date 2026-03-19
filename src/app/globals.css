@@ -708,10 +708,11 @@ h2 {
   transition: all 0.3s ease;
 }
 
-.v2-feature-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+.v2-feature-card:hover,
+.v2-option-card:hover {
+  transform: translateY(-5px) !important;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
 }
 
 .v2-feature-icon {
@@ -770,10 +771,6 @@ h2 {
   transition: all 0.3s ease;
 }
 
-.v2-option-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.08);
-}
 
 .v2-option-recommended {
   display: inline-block;

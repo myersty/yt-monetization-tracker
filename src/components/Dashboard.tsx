@@ -26,15 +26,21 @@ export type WhatIfRates = {
 export default function Dashboard({ data, onReset, isOAuthDashboard = false }: DashboardProps) {
   const projections = useMemo(() => calculateProjections(data.daily), [data.daily]);
   const outliers = useMemo(() => detectOutliers(data.daily), [data.daily]);
-  const [whatIfRates, setWhatIfRates] = useState<WhatIfRates>(null);
-  const chartData = useMemo(
-    () => generateProjectionPoints(data.daily, projections, 365, whatIfRates),
-    [data.daily, projections, whatIfRates]
-  );
-
   const currentProjection = projections.find(p => p.model === 'current');
   const currentSubsPerDay = currentProjection?.subscriberProjection.dailyRate || 0;
   const currentHoursPerDay = currentProjection?.watchTimeProjection.dailyRate || 0;
+
+  // What-If defaults to current pace so both lines overlap until sliders are moved
+  const [whatIfRates, setWhatIfRates] = useState<WhatIfRates>(null);
+  const effectiveWhatIfRates = whatIfRates ?? {
+    dailyNewSubs: currentSubsPerDay,
+    dailyWatchHours: currentHoursPerDay,
+  };
+
+  const chartData = useMemo(
+    () => generateProjectionPoints(data.daily, projections, 365, effectiveWhatIfRates),
+    [data.daily, projections, effectiveWhatIfRates]
+  );
 
   // Summary stats
   const hasSubData = data.daily.some(d => d.subscribersGained !== undefined || d.subscribers !== undefined);
