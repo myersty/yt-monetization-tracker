@@ -54,7 +54,7 @@ export default function ContentMetrics({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Card 1: Content Performance */}
-      <div className="card p-6">
+      <div className="card ring-base ring-tr p-6">
         <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-4">
           Content Performance (Last 90 Days)
         </p>
@@ -86,7 +86,7 @@ export default function ContentMetrics({
       </div>
 
       {/* Card 2: Path to Monetization */}
-      <div className="card p-6">
+      <div className="card ring-base ring-tl p-6">
         <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-4">
           Path to Monetization
         </p>

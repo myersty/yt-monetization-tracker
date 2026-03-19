@@ -58,7 +58,7 @@ export default function VelocityCard({ daily, availableMetrics }: VelocityCardPr
   };
 
   return (
-    <div className="card p-5 min-h-[320px] flex flex-col">
+    <div className="card ring-base ring-bl p-5 min-h-[320px] flex flex-col">
       {/* Header with tabs */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex bg-[var(--gray-100)] rounded-full p-0.5">

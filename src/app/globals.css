@@ -123,33 +123,54 @@ h2 {
   opacity: 1;
 }
 
-/* Concentric circle rings inside card */
-.card::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -30%);
-  width: 500px;
-  height: 500px;
-  background:
-    radial-gradient(circle, transparent 30%, rgba(255,255,255,0.018) 31%, rgba(255,255,255,0.018) 31.5%, transparent 32%),
-    radial-gradient(circle, transparent 45%, rgba(255,255,255,0.013) 46%, rgba(255,255,255,0.013) 46.5%, transparent 47%),
-    radial-gradient(circle, transparent 60%, rgba(255,255,255,0.009) 61%, rgba(255,255,255,0.009) 61.5%, transparent 62%),
-    radial-gradient(circle, transparent 75%, rgba(255,255,255,0.006) 76%, rgba(255,255,255,0.006) 76.5%, transparent 77%);
-  pointer-events: none;
-  z-index: 0;
-}
-
+/* Card children above any pseudo-elements */
 .card > * {
   position: relative;
   z-index: 1;
 }
 
-/* Legacy classes — map to unified .card */
-.card-premium { /* kept for backward compat */ }
-.card-glow { /* absorbed into .card */ }
-.card-pattern { /* absorbed into .card */ }
+/* ─── QUADRANT RING SYSTEM ────────────────────────────────────────────── */
+/* Four cards each show one quarter of a shared concentric circle pattern.
+   When placed in a 2×2 grid, the rings align to form one unified circle. */
+
+.ring-base::after {
+  content: '';
+  position: absolute;
+  width: 700px;
+  height: 700px;
+  background:
+    radial-gradient(circle, transparent 25%, rgba(255,255,255,0.022) 25.5%, rgba(255,255,255,0.022) 26%, transparent 26.5%),
+    radial-gradient(circle, transparent 37%, rgba(255,255,255,0.017) 37.5%, rgba(255,255,255,0.017) 38%, transparent 38.5%),
+    radial-gradient(circle, transparent 49%, rgba(255,255,255,0.013) 49.5%, rgba(255,255,255,0.013) 50%, transparent 50.5%),
+    radial-gradient(circle, transparent 61%, rgba(255,255,255,0.009) 61.5%, rgba(255,255,255,0.009) 62%, transparent 62.5%),
+    radial-gradient(circle, transparent 73%, rgba(255,255,255,0.006) 73.5%, rgba(255,255,255,0.006) 74%, transparent 74.5%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Top-left card: rings at bottom-right corner */
+.ring-br::after {
+  bottom: -350px;
+  right: -350px;
+}
+
+/* Top-right card: rings at bottom-left corner */
+.ring-bl::after {
+  bottom: -350px;
+  left: -350px;
+}
+
+/* Bottom-left card: rings at top-right corner */
+.ring-tr::after {
+  top: -350px;
+  right: -350px;
+}
+
+/* Bottom-right card: rings at top-left corner */
+.ring-tl::after {
+  top: -350px;
+  left: -350px;
+}
 
 /* ─── AMBIENT BACKGROUND ─────────────────────────────────────────────── */
 
