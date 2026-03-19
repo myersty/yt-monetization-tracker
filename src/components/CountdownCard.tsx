@@ -95,9 +95,6 @@ export default function CountdownCard({ projections, currentSubscribers = 0, tot
             <p className="text-[var(--gray-500)] text-xs mt-1">
               At your current pace
             </p>
-            <p className="text-[var(--gray-500)] text-xs mt-3 italic max-w-[280px] mx-auto">
-              {getMotivationalMessage(overallProgress, primaryDays)}
-            </p>
           </div>
           <div className="mt-auto pt-4 border-t border-white/6">
             <p className="text-[var(--gray-500)] text-[11px] leading-relaxed">

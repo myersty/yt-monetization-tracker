@@ -14,16 +14,16 @@ function Ring({
   goal,
   radius,
   strokeWidth,
-  color,
-  label,
+  gradientId,
+  glowColor,
   delay = 0,
 }: {
   value: number;
   goal: number;
   radius: number;
   strokeWidth: number;
-  color: string;
-  label: string;
+  gradientId: string;
+  glowColor: string;
   delay?: number;
 }) {
   const [animatedProgress, setAnimatedProgress] = useState(0);
@@ -38,10 +38,11 @@ function Ring({
     return () => clearTimeout(timer);
   }, [progress, delay]);
 
-  const percentage = Math.round(progress * 100);
-  const displayValue = value >= goal
-    ? goal.toLocaleString()
-    : value.toLocaleString();
+  // Calculate the endpoint position for the glow dot
+  const endAngle = -90 + animatedProgress * 360;
+  const endAngleRad = (endAngle * Math.PI) / 180;
+  const endX = 150 + radius * Math.cos(endAngleRad);
+  const endY = 150 + radius * Math.sin(endAngleRad);
 
   return (
     <g>
@@ -53,14 +54,15 @@ function Ring({
         fill="none"
         stroke="var(--gray-200)"
         strokeWidth={strokeWidth}
+        opacity={0.4}
       />
-      {/* Progress arc */}
+      {/* Progress arc with gradient */}
       <circle
         cx="150"
         cy="150"
         r={radius}
         fill="none"
-        stroke={color}
+        stroke={`url(#${gradientId})`}
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeDasharray={circumference}
@@ -68,17 +70,30 @@ function Ring({
         transform="rotate(-90 150 150)"
         style={{
           transition: 'stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
+          filter: `drop-shadow(0 0 6px ${glowColor})`,
         }}
       />
-      {/* Completion checkmark for achieved goals */}
-      {value >= goal && (
-        <circle
-          cx="150"
-          cy={150 - radius}
-          r={strokeWidth / 2 + 2}
-          fill={color}
-          transform="rotate(-90 150 150)"
-        />
+      {/* Glowing endpoint dot */}
+      {animatedProgress > 0.01 && (
+        <g style={{ transition: 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+          {/* Outer glow */}
+          <circle
+            cx={endX}
+            cy={endY}
+            r={strokeWidth / 2 + 4}
+            fill={glowColor}
+            opacity={0.3}
+            style={{ filter: `blur(4px)` }}
+          />
+          {/* Inner bright dot */}
+          <circle
+            cx={endX}
+            cy={endY}
+            r={strokeWidth / 2 + 1}
+            fill="white"
+            opacity={0.9}
+          />
+        </g>
       )}
     </g>
   );
@@ -113,15 +128,40 @@ export default function ProgressRings({
 
       {/* Center — Rings */}
       <div className="relative w-[200px] h-[200px] sm:w-[260px] sm:h-[260px] flex-shrink-0">
-        <svg viewBox="0 0 300 300" className="w-full h-full">
+        <svg viewBox="0 0 300 300" className="w-full h-full" style={{ overflow: 'visible' }}>
+          <defs>
+            {/* Subscriber ring gradient: dark orange → bright gold */}
+            <linearGradient id="subsGradient" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#8B4513" />
+              <stop offset="40%" stopColor="#FF6B00" />
+              <stop offset="70%" stopColor="#FF8C33" />
+              <stop offset="100%" stopColor="#FFC83B" />
+            </linearGradient>
+            {/* Watch hours ring gradient: dark blue → bright blue */}
+            <linearGradient id="hoursGradient" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#0D47A1" />
+              <stop offset="40%" stopColor="#1565C0" />
+              <stop offset="70%" stopColor="#1E88E5" />
+              <stop offset="100%" stopColor="#42A5F5" />
+            </linearGradient>
+            {/* Glow filters */}
+            <filter id="ringGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
           {/* Outer ring — Subscribers */}
           <Ring
             value={currentSubscribers}
             goal={subscriberGoal}
             radius={130}
             strokeWidth={14}
-            color="var(--gold)"
-            label="Subscribers"
+            gradientId="subsGradient"
+            glowColor="rgba(255, 107, 0, 0.6)"
             delay={200}
           />
           {/* Inner ring — Watch Hours */}
@@ -130,8 +170,8 @@ export default function ProgressRings({
             goal={watchHoursGoal}
             radius={105}
             strokeWidth={14}
-            color="#1565C0"
-            label="Watch Hours"
+            gradientId="hoursGradient"
+            glowColor="rgba(21, 101, 192, 0.6)"
             delay={400}
           />
         </svg>
