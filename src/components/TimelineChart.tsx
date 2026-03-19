@@ -420,18 +420,20 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                 }}
               />
 
-              {/* Goal line */}
+              {/* Goal line — dimmed, label on left near Y-axis */}
               <ReferenceLine
                 y={goal}
                 stroke="var(--gold)"
-                strokeDasharray="8 4"
-                strokeWidth={2.5}
+                strokeDasharray="12 6"
+                strokeWidth={1.5}
+                strokeOpacity={0.35}
                 label={{
-                  value: `🎯 ${goalLabel}`,
-                  position: 'insideTopRight',
-                  fontSize: 12,
+                  value: goalLabel,
+                  position: 'insideTopLeft',
+                  fontSize: 10,
                   fill: 'var(--gold)',
-                  fontWeight: 600,
+                  fontWeight: 500,
+                  opacity: 0.6,
                 }}
               />
 
