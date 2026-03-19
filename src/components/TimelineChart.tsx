@@ -48,6 +48,7 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
   const goal = view === 'subscribers' ? 1000 : 4000;
   const goalLabel = view === 'subscribers' ? '1,000 Subscribers' : '4,000 Watch Hours';
   const dataKey = view === 'subscribers' ? 'subscribers' : 'watchTimeHours';
+  const yAxisLabel = view === 'subscribers' ? 'Subscribers' : view === 'watchHours' ? 'Watch Hours' : 'Weeks to Goal';
 
   // Filter data by selected time range and add timestamps for proper time-based x-axis
   const filteredData = useMemo((): ChartDataPoint[] => {
@@ -396,6 +397,13 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                 width={50}
                 domain={[0, goal * 2]}
                 allowDataOverflow={true}
+                label={{
+                  value: yAxisLabel,
+                  angle: -90,
+                  position: 'insideLeft',
+                  offset: 10,
+                  style: { fontSize: 11, fill: 'var(--gray-500)', fontWeight: 500, textAnchor: 'middle' },
+                }}
               />
               <Tooltip
                 labelFormatter={(ts) => new Date(ts).toLocaleDateString('en-US', {
