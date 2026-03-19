@@ -50,32 +50,33 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
   const dataKey = view === 'subscribers' ? 'subscribers' : 'watchTimeHours';
   const yAxisLabel = view === 'subscribers' ? 'Subscribers' : view === 'watchtime' ? 'Watch Hours' : 'Weeks to Goal';
 
-  // Filter data by selected time range and add timestamps for proper time-based x-axis
-  // Time range controls how much HISTORY is shown, but projections are ALWAYS included
+  // Filter data by selected time range — zoom in/out around today
+  // Each range creates a symmetric window: N days back + N days forward
+  // "All" shows everything including full projection
   const filteredData = useMemo((): ChartDataPoint[] => {
     const rangeDef = TIME_RANGES.find(r => r.key === timeRange);
 
-    // Always include all projection data (everything after last historical date)
-    const projectionData = data.filter(d => d.date > lastHistoricalDate);
-
-    let historicalData: ProjectionPoint[];
+    let result: ProjectionPoint[];
     if (!rangeDef || rangeDef.days === null) {
-      // "All" — show all history
-      historicalData = data.filter(d => d.date <= lastHistoricalDate);
+      // "All" — show everything
+      result = [...data];
     } else {
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - rangeDef.days);
-      const cutoffStr = cutoffDate.toISOString().split('T')[0];
+      // Anchor on lastHistoricalDate (stable between server/client to avoid hydration mismatch)
+      const anchor = new Date(lastHistoricalDate + 'T00:00:00');
+      // Look back by the range amount
+      const pastCutoff = new Date(anchor);
+      pastCutoff.setDate(pastCutoff.getDate() - rangeDef.days);
+      const pastStr = pastCutoff.toISOString().split('T')[0];
 
-      historicalData = data.filter(
-        d => d.date >= cutoffStr && d.date <= lastHistoricalDate
-      );
+      // Look forward by the same amount (zoom symmetry)
+      const futureCutoff = new Date(anchor);
+      futureCutoff.setDate(futureCutoff.getDate() + rangeDef.days);
+      const futureStr = futureCutoff.toISOString().split('T')[0];
+
+      result = data.filter(d => d.date >= pastStr && d.date <= futureStr);
     }
 
-    const result = [...historicalData, ...projectionData];
-
-    // Thin out dense historical data for smoother chart rendering
-    // For ranges > 6 months, sample every 3rd day for historical data
+    // Thin out dense data for smoother chart rendering
     const thinned: ProjectionPoint[] = [];
     for (let i = 0; i < result.length; i++) {
       const isProjection = result[i].date > lastHistoricalDate;
@@ -85,7 +86,6 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
       if (isProjection || isLastHistorical || isLast) {
         thinned.push(result[i]);
       } else if (timeRange === 'All' || timeRange === '1Y') {
-        // For longer ranges, sample every 3rd day
         if (i % 3 === 0) thinned.push(result[i]);
       } else if (timeRange === '6M') {
         if (i % 2 === 0) thinned.push(result[i]);
