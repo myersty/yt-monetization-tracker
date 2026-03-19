@@ -61,8 +61,8 @@ export default function CountdownCard({ projections, currentSubscribers = 0, tot
   const stage = getStageEmoji(alreadyMonetizable ? 100 : overallProgress);
 
   return (
-    <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)] card-pattern">
-      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--gray-600)] mb-3">
+    <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)] card-pattern min-h-[320px] flex flex-col">
+      <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-3">
         Estimated Monetization Date
       </p>
 
@@ -97,6 +97,15 @@ export default function CountdownCard({ projections, currentSubscribers = 0, tot
             </p>
             <p className="text-[var(--gray-500)] text-xs mt-3 italic max-w-[280px] mx-auto">
               {getMotivationalMessage(overallProgress, primaryDays)}
+            </p>
+          </div>
+          <div className="mt-auto pt-4 border-t border-white/6">
+            <p className="text-[var(--gray-500)] text-[11px] leading-relaxed">
+              Calculated from your posting cadence, average views, and watch time retention.{' '}
+              <a href="#recommendations" className="text-accent-gradient font-medium hover:underline">
+                See your Channel Insights
+              </a>{' '}
+              for tips to shorten your timeline.
             </p>
           </div>
         </>

@@ -98,7 +98,7 @@ export default function WhatIfSimulator({
   return (
     <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)]">
       <div className="flex items-center justify-between mb-1">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--gray-600)]">
+        <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient">
           What-If Simulator
         </p>
         <button
@@ -128,7 +128,7 @@ export default function WhatIfSimulator({
             <label className="text-sm font-medium">
               What if you posted every {daysBetweenPosts} day{daysBetweenPosts !== 1 ? 's' : ''}?
             </label>
-            <span className="text-sm font-bold font-[family-name:var(--font-display)] text-[var(--gold)]">
+            <span className="text-sm font-bold font-[family-name:var(--font-display)] text-accent-gradient">
               {daysBetweenPosts}d
             </span>
           </div>
@@ -155,7 +155,7 @@ export default function WhatIfSimulator({
         <div>
           <div className="flex justify-between mb-1">
             <label className="text-sm font-medium">Avg video length (min)</label>
-            <span className="text-sm font-bold font-[family-name:var(--font-display)] text-[var(--gold)]">
+            <span className="text-sm font-bold font-[family-name:var(--font-display)] text-accent-gradient">
               {avgVideoMinutes}
             </span>
           </div>
@@ -182,7 +182,7 @@ export default function WhatIfSimulator({
         <div>
           <div className="flex justify-between mb-1">
             <label className="text-sm font-medium">Avg views per video</label>
-            <span className="text-sm font-bold font-[family-name:var(--font-display)] text-[var(--gold)]">
+            <span className="text-sm font-bold font-[family-name:var(--font-display)] text-accent-gradient">
               {avgViewsPerVideo.toLocaleString()}
             </span>
           </div>
@@ -211,7 +211,7 @@ export default function WhatIfSimulator({
       {averageViewPercentage !== undefined && (
         <div className="mt-4 px-3 py-2 rounded-lg bg-[var(--gray-50)] border border-white/4">
           <p className="text-[10px] text-[var(--gray-500)]">
-            Using your real average view percentage: <span className="text-[var(--gold)] font-semibold">{averageViewPercentage.toFixed(1)}%</span>
+            Using your real average view percentage: <span className="text-accent-gradient font-semibold">{averageViewPercentage.toFixed(1)}%</span>
           </p>
         </div>
       )}

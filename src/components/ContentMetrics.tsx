@@ -55,7 +55,7 @@ export default function ContentMetrics({
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Card 1: Content Performance */}
       <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)]">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--gray-600)] mb-4">
+        <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-4">
           Content Performance (Last 90 Days)
         </p>
         <div className="space-y-4">
@@ -87,7 +87,7 @@ export default function ContentMetrics({
 
       {/* Card 2: Path to Monetization */}
       <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)]">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--gray-600)] mb-4">
+        <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-4">
           Path to Monetization
         </p>
 
@@ -103,7 +103,7 @@ export default function ContentMetrics({
             </div>
             <div className="grid grid-cols-2 gap-4 pt-3 border-t border-[var(--gray-200)]">
               <div className="text-center">
-                <p className="text-2xl font-bold font-[family-name:var(--font-display)] text-[var(--gold)]">
+                <p className="text-2xl font-bold font-[family-name:var(--font-display)] text-accent-gradient">
                   {Math.round(subsMultiplier)}x
                 </p>
                 <p className="text-xs text-[var(--gray-600)] mt-1">

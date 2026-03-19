@@ -34,7 +34,7 @@ export default function MilestoneMarkers({ currentSubscribers, totalWatchHours }
 
   return (
     <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)]">
-      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--gray-600)] mb-4">
+      <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-4">
         Milestones
       </p>
 
@@ -81,7 +81,7 @@ export default function MilestoneMarkers({ currentSubscribers, totalWatchHours }
                 </svg>
               )}
               {isNext && !achieved && (
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--gold)] bg-[var(--gold)]/10 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-accent-gradient bg-[var(--gold)]/10 px-2 py-0.5 rounded-full">
                   Next
                 </span>
               )}

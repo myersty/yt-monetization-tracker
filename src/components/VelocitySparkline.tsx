@@ -18,7 +18,7 @@ const TAB_CONFIG: Record<MetricTab, { label: string; shortLabel: string }> = {
 };
 
 function getMetricData(daily: DailyMetrics[], metric: MetricTab) {
-  const recentDays = daily.slice(-30);
+  const recentDays = daily.slice(-90);
 
   const data = recentDays.map(d => {
     let value = 0;
@@ -32,8 +32,9 @@ function getMetricData(daily: DailyMetrics[], metric: MetricTab) {
     return { date: d.date, value };
   });
 
-  const firstHalf = data.slice(0, 15);
-  const secondHalf = data.slice(15);
+  const midpoint = Math.floor(data.length / 2);
+  const firstHalf = data.slice(0, midpoint);
+  const secondHalf = data.slice(midpoint);
   const firstAvg = firstHalf.reduce((s, d) => s + d.value, 0) / (firstHalf.length || 1);
   const secondAvg = secondHalf.reduce((s, d) => s + d.value, 0) / (secondHalf.length || 1);
   const isAccelerating = secondAvg > firstAvg * 1.05;
@@ -57,7 +58,7 @@ export default function VelocityCard({ daily, availableMetrics }: VelocityCardPr
   };
 
   return (
-    <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-5 shadow-[var(--card-shadow)]">
+    <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-5 shadow-[var(--card-shadow)] min-h-[320px] flex flex-col">
       {/* Header with tabs */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex bg-[var(--gray-100)] rounded-full p-0.5">
@@ -104,7 +105,7 @@ export default function VelocityCard({ daily, availableMetrics }: VelocityCardPr
       </div>
 
       {/* Sparkline */}
-      <div className="h-24">
+      <div className="flex-1 min-h-[100px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={metricData.data} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
             <defs>
@@ -140,8 +141,8 @@ export default function VelocityCard({ daily, availableMetrics }: VelocityCardPr
         </ResponsiveContainer>
       </div>
 
-      {/* 30-day label */}
-      <p className="text-[10px] text-[var(--gray-500)] mt-2 text-center">Last 30 days</p>
+      {/* 90-day label */}
+      <p className="text-[10px] text-[var(--gray-500)] mt-2 text-center">Last 90 days</p>
     </div>
   );
 }

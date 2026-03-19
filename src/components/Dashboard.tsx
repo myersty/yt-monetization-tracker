@@ -161,7 +161,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
         {/* Outlier Alerts */}
         {outliers.length > 0 && (
           <div className="mb-8 rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)]">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--gray-600)] mb-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-3">
               Viral Spike Detection
             </p>
             <p className="text-sm text-[var(--gray-600)] mb-4">
@@ -188,7 +188,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
 
         {/* Channel Overview */}
         <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)]">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--gray-600)] mb-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-4">
             Channel Overview
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

@@ -158,8 +158,8 @@ export default function RecommendationsCard(props: RecommendationsCardProps) {
   if (recommendations.length === 0) return null;
 
   return (
-    <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)] card-pattern">
-      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--gray-600)] mb-2">
+    <div id="recommendations" className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)] card-pattern scroll-mt-8">
+      <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-2">
         Channel Insights
       </p>
       <p className="text-[var(--gray-500)] text-sm mb-5">
