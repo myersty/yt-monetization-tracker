@@ -394,6 +394,12 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                 tickFormatter={formatValue}
                 tick={{ fontSize: 11, fill: 'var(--gray-600)' }}
                 width={50}
+                domain={[0, (dataMax: number) => {
+                  // Ensure the goal line stays at a stable position
+                  // Y-axis max is at least 130% of the goal, or the data max, whichever is larger
+                  const minMax = goal * 1.3;
+                  return Math.max(minMax, dataMax * 1.1);
+                }]}
               />
               <Tooltip
                 labelFormatter={(ts) => new Date(ts).toLocaleDateString('en-US', {
