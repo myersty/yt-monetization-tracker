@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Dashboard from '@/components/Dashboard';
+import DashboardV2 from '@/components/DashboardV2';
 import { ParsedData } from '@/lib/types';
 
 type AuthStatus = {
@@ -182,7 +182,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <Dashboard data={parsedData} onReset={handleReset} isOAuthDashboard={true} />
+        <DashboardV2 data={parsedData} onReset={handleReset} isOAuthDashboard={true} />
       </div>
     );
   }

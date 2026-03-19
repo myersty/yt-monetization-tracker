@@ -113,7 +113,7 @@ export default function ProgressRings({
       {/* Left — Subscribers */}
       <div className="flex flex-col items-end text-right">
         <div className="flex items-center gap-2 mb-1">
-          <span className="w-2.5 h-2.5 rounded-full bg-[var(--gold)]" />
+          <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'linear-gradient(135deg, #FFC83B, #FF6B00)' }} />
           <p className="text-xs uppercase tracking-wider text-[var(--gray-600)] font-semibold">
             Subscribers
           </p>
