@@ -35,6 +35,7 @@ export default function WhatIfSimulator({
   const [daysBetweenPosts, setDaysBetweenPosts] = useState(Math.round(actualCadence));
   const [avgVideoMinutes, setAvgVideoMinutes] = useState(Math.round(actualDuration));
   const [avgViewsPerVideo, setAvgViewsPerVideo] = useState(actualViews);
+  const [userHasAdjusted, setUserHasAdjusted] = useState(false);
 
   // Update defaults when real data arrives
   useEffect(() => {
@@ -86,14 +87,22 @@ export default function WhatIfSimulator({
   }, [daysBetweenPosts, avgVideoMinutes, avgViewsPerVideo, retentionRate, currentSubscribers, totalWatchHours]);
 
   // Report rates to parent for timeline integration
+  // Before user touches sliders, use actual current pace so What-If overlaps with Current Pace
   useEffect(() => {
     if (onRatesChange) {
-      onRatesChange({
-        dailyNewSubs: projection.dailyNewSubs,
-        dailyWatchHours: projection.dailyWatchHours,
-      });
+      if (userHasAdjusted) {
+        onRatesChange({
+          dailyNewSubs: projection.dailyNewSubs,
+          dailyWatchHours: projection.dailyWatchHours,
+        });
+      } else {
+        onRatesChange({
+          dailyNewSubs: currentSubsPerDay,
+          dailyWatchHours: currentHoursPerDay,
+        });
+      }
     }
-  }, [projection.dailyNewSubs, projection.dailyWatchHours, onRatesChange]);
+  }, [projection.dailyNewSubs, projection.dailyWatchHours, onRatesChange, userHasAdjusted, currentSubsPerDay, currentHoursPerDay]);
 
   return (
     <div className="card p-6">
@@ -106,6 +115,7 @@ export default function WhatIfSimulator({
             setDaysBetweenPosts(Math.round(actualCadence));
             setAvgVideoMinutes(Math.round(actualDuration));
             setAvgViewsPerVideo(actualViews);
+            setUserHasAdjusted(false);
           }}
           className="text-xs text-[var(--gray-500)] hover:text-[var(--gold)] transition-colors flex items-center gap-1"
           title="Reset sliders to defaults"
@@ -137,7 +147,7 @@ export default function WhatIfSimulator({
             min={1}
             max={30}
             value={daysBetweenPosts}
-            onChange={e => setDaysBetweenPosts(Number(e.target.value))}
+            onChange={e => { setDaysBetweenPosts(Number(e.target.value)); setUserHasAdjusted(true); }}
             className="w-full accent-[var(--gold)]"
           />
           <div className="flex justify-between text-[10px] text-[var(--gray-500)]">
@@ -164,7 +174,7 @@ export default function WhatIfSimulator({
             min={3}
             max={60}
             value={avgVideoMinutes}
-            onChange={e => setAvgVideoMinutes(Number(e.target.value))}
+            onChange={e => { setAvgVideoMinutes(Number(e.target.value)); setUserHasAdjusted(true); }}
             className="w-full accent-[var(--gold)]"
           />
           <div className="flex justify-between text-[10px] text-[var(--gray-500)]">
@@ -192,7 +202,7 @@ export default function WhatIfSimulator({
             max={10000}
             step={50}
             value={avgViewsPerVideo}
-            onChange={e => setAvgViewsPerVideo(Number(e.target.value))}
+            onChange={e => { setAvgViewsPerVideo(Number(e.target.value)); setUserHasAdjusted(true); }}
             className="w-full accent-[var(--gold)]"
           />
           <div className="flex justify-between text-[10px] text-[var(--gray-500)]">
