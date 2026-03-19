@@ -82,12 +82,9 @@ export default function CountdownCard({ projections, currentSubscribers = 0, tot
       ) : (
         <>
           {/* Primary projection */}
-          <div className="text-center mb-6">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <span className={`${stage.size} leading-none`}>{stage.emoji}</span>
-              <span className="text-xs text-[var(--gray-500)]">{Math.round(overallProgress)}% there</span>
-            </div>
-            <p className="text-2xl font-bold font-[family-name:var(--font-display)] text-[var(--foreground)]">
+          <div className="text-center py-4">
+            <span className={`${stage.size} leading-none`}>{stage.emoji}</span>
+            <p className="text-2xl font-bold font-[family-name:var(--font-display)] text-[var(--foreground)] mt-2">
               {formatDate(primaryDate || null)}
             </p>
             {primaryDays !== null && primaryDays > 0 && (
@@ -101,26 +98,6 @@ export default function CountdownCard({ projections, currentSubscribers = 0, tot
             <p className="text-[var(--gray-500)] text-xs mt-3 italic max-w-[280px] mx-auto">
               {getMotivationalMessage(overallProgress, primaryDays)}
             </p>
-          </div>
-
-          {/* All three estimates */}
-          <div className="grid grid-cols-3 gap-3 pt-4 border-t border-[var(--gray-200)]">
-            <ProjectionEstimate
-              label="Conservative"
-              date={conservative?.monetizationDate || null}
-              color="var(--gray-600)"
-            />
-            <ProjectionEstimate
-              label="Current Pace"
-              date={current?.monetizationDate || null}
-              color="var(--gold)"
-              active
-            />
-            <ProjectionEstimate
-              label="Optimistic"
-              date={optimistic?.monetizationDate || null}
-              color="#2E7D32"
-            />
           </div>
         </>
       )}

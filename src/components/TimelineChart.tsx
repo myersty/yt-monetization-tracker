@@ -406,12 +406,8 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                   const labels: Record<string, string> = {
                     subscribers: 'Subscribers',
                     watchTimeHours: 'Watch Hours',
-                    conservative_subs: 'Conservative',
-                    conservative_hours: 'Conservative',
                     current_subs: 'Current Pace',
                     current_hours: 'Current Pace',
-                    optimistic_subs: 'Optimistic',
-                    optimistic_hours: 'Optimistic',
                     whatif_subs: 'What-If',
                     whatif_hours: 'What-If',
                   };
@@ -453,17 +449,6 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                 <>
                   <Area
                     type="monotone"
-                    dataKey={view === 'subscribers' ? 'conservative_subs' : 'conservative_hours'}
-                    stroke="var(--gray-400)"
-                    fill="none"
-                    strokeWidth={1.5}
-                    strokeDasharray="6 3"
-                    dot={false}
-                    name={view === 'subscribers' ? 'conservative_subs' : 'conservative_hours'}
-                    animationDuration={500}
-                  />
-                  <Area
-                    type="monotone"
                     dataKey={view === 'subscribers' ? 'current_subs' : 'current_hours'}
                     stroke={view === 'subscribers' ? 'var(--gold)' : '#1565C0'}
                     fill="none"
@@ -471,17 +456,6 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                     strokeDasharray="6 3"
                     dot={false}
                     name={view === 'subscribers' ? 'current_subs' : 'current_hours'}
-                    animationDuration={500}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey={view === 'subscribers' ? 'optimistic_subs' : 'optimistic_hours'}
-                    stroke="#2E7D32"
-                    fill="none"
-                    strokeWidth={1.5}
-                    strokeDasharray="6 3"
-                    dot={false}
-                    name={view === 'subscribers' ? 'optimistic_subs' : 'optimistic_hours'}
                     animationDuration={500}
                   />
                   {/* What-If scenario line */}
@@ -507,16 +481,8 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
           {showProjections && (
             <div className="flex justify-center gap-6 mt-4 text-xs text-[var(--gray-600)]">
               <span className="flex items-center gap-1.5">
-                <span className="w-4 h-0 border-t-2 border-dashed border-[var(--gray-400)]" />
-                Conservative
-              </span>
-              <span className="flex items-center gap-1.5">
                 <span className="w-4 h-0 border-t-2 border-dashed" style={{ borderColor: view === 'subscribers' ? 'var(--gold)' : '#1565C0' }} />
                 Current Pace
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-4 h-0 border-t-2 border-dashed border-[#2E7D32]" />
-                Optimistic
               </span>
               {filteredData.some(d => d.whatif_subs !== undefined || d.whatif_hours !== undefined) && (
                 <span className="flex items-center gap-1.5">
