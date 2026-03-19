@@ -156,30 +156,25 @@ export default function DashboardPage() {
   if (parsedData) {
     return (
       <div className="min-h-screen bg-[var(--gray-50)]">
-        {/* Channel Header Bar */}
+        {/* Minimal channel identity */}
         {authStatus?.channel && (
-          <div className="bg-[var(--foreground)] border-b border-[var(--gray-200)]">
-            <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="max-w-6xl mx-auto px-6 pt-6 pb-2">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {authStatus.channel.thumbnail && (
                   <img
                     src={authStatus.channel.thumbnail}
                     alt={authStatus.channel.name}
-                    className="w-10 h-10 rounded-full border border-[var(--gray-300)]"
+                    className="w-9 h-9 rounded-full border border-white/10"
                   />
                 )}
-                <div>
-                  <p className="text-sm font-medium text-[var(--background)]">
-                    {authStatus.channel.name}
-                  </p>
-                  <p className="text-xs text-[var(--gray-500)]">
-                    Connected via YouTube
-                  </p>
-                </div>
+                <p className="text-sm font-medium text-[var(--gray-600)]">
+                  {authStatus.channel.name}
+                </p>
               </div>
               <button
                 onClick={handleDisconnect}
-                className="px-4 py-1.5 text-xs font-medium rounded-full border border-[var(--gray-400)] text-[var(--gray-400)] hover:text-red-400 hover:border-red-400 transition-colors"
+                className="text-xs text-[var(--gray-500)] hover:text-red-400 transition-colors"
               >
                 Disconnect
               </button>

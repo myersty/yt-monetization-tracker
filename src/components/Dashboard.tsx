@@ -46,26 +46,30 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
 
   return (
     <div className="min-h-screen bg-[var(--gray-50)]">
-      {/* Header (hidden for OAuth dashboard since the channel header bar is shown instead) */}
+      {/* Minimal header for CSV mode */}
       {!isOAuthDashboard && (
-        <header className="bg-[var(--gray-100)] border-b border-white/6 py-4 px-6">
-          <div className="max-w-6xl mx-auto flex items-center justify-between">
-            <div>
-              <h1 className="font-[family-name:var(--font-display)] font-bold text-lg">
-                Monetization Tracker
-              </h1>
+        <div className="max-w-6xl mx-auto px-6 pt-6 pb-2">
+          <div className="flex items-center justify-between">
+            {data.channelName ? (
+              <div className="flex items-center gap-3">
+                {data.channelThumbnail && (
+                  <img src={data.channelThumbnail} alt={data.channelName} className="w-9 h-9 rounded-full border border-white/10" />
+                )}
+                <p className="text-sm font-medium text-[var(--gray-600)]">{data.channelName}</p>
+              </div>
+            ) : (
               <p className="text-xs text-[var(--gray-500)]">
                 {data.dateRange.start} to {data.dateRange.end} &middot; {data.daily.length} days
               </p>
-            </div>
+            )}
             <button
               onClick={onReset}
-              className="px-4 py-2 text-sm rounded-full border border-[var(--gray-400)] text-[var(--gray-400)] hover:text-[var(--background)] hover:border-[var(--background)] transition-colors"
+              className="text-xs text-[var(--gray-500)] hover:text-[var(--gold)] transition-colors"
             >
               Upload New Data
             </button>
           </div>
-        </header>
+        </div>
       )}
 
       <div className="max-w-6xl mx-auto px-6 py-8">
@@ -79,21 +83,6 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
               {!hasWatchData && ' Watch Time'}
               {' '}data from YouTube Studio&apos;s Advanced Mode.
               {hasViewData && ' Currently showing projections based on available view data.'}
-            </p>
-          </div>
-        )}
-
-        {/* Shorts info badge */}
-        {shortsBreakdown && shortsBreakdown.shortsWatchTimeHours > 0 && (
-          <div className="mb-6 p-3 rounded-[var(--card-radius)] bg-[#1565C0]/5 border border-[#1565C0]/20 animate-fade-in-up">
-            <p className="text-sm text-[var(--gray-700)] flex items-center gap-2">
-              <svg className="w-4 h-4 text-[#1565C0] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>
-                Watch hours shown are <strong>long-form only</strong>.{' '}
-                {Math.round(shortsBreakdown.shortsWatchTimeHours).toLocaleString()} hours from Shorts excluded.
-              </span>
             </p>
           </div>
         )}
@@ -230,6 +219,43 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
           avgWatchHoursPerVideo={data.avgWatchHoursPerVideo}
           videosLast90Days={data.videosLast90Days}
         />
+
+        {/* How It Works / FAQ Section */}
+        <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)] mb-8">
+          <h3 className="text-heading-gradient font-[family-name:var(--font-display)] font-medium text-xl mb-6">
+            How Your Data Is Calculated
+          </h3>
+          <div className="space-y-5 text-sm text-[var(--gray-600)]">
+            <div>
+              <p className="font-semibold text-[var(--gray-700)] mb-1">Watch Hours</p>
+              <p>
+                Only <strong>long-form video</strong> watch hours count toward the 4,000-hour YouTube Partner Program requirement.
+                {shortsBreakdown && shortsBreakdown.shortsWatchTimeHours > 0 && (
+                  <> We detected <strong>{Math.round(shortsBreakdown.shortsWatchTimeHours).toLocaleString()} hours</strong> from Shorts, which have been excluded from your total.</>
+                )}
+                {' '}YouTube evaluates watch hours on a <strong>rolling 365-day window</strong> &mdash; hours earned more than a year ago no longer count.
+              </p>
+            </div>
+            <div>
+              <p className="font-semibold text-[var(--gray-700)] mb-1">Subscribers</p>
+              <p>
+                Your subscriber count is cumulative &mdash; once you reach 1,000, you stay qualified (unless you lose subscribers below the threshold). Subscribers gained from Shorts <strong>do count</strong> toward the requirement.
+              </p>
+            </div>
+            <div>
+              <p className="font-semibold text-[var(--gray-700)] mb-1">Projections</p>
+              <p>
+                The &ldquo;Current Pace&rdquo; projection uses a weighted moving average of your last 30&ndash;90 days of growth. The &ldquo;What-If&rdquo; line uses your actual average view percentage ({data.averageViewPercentage ? `${data.averageViewPercentage.toFixed(0)}%` : 'estimated'}) to calculate how changes to your posting schedule would affect your trajectory.
+              </p>
+            </div>
+            <div>
+              <p className="font-semibold text-[var(--gray-700)] mb-1">Average View Percentage</p>
+              <p>
+                This measures how much of each video your audience watches on average. It&rsquo;s calculated from your total watch hours divided by your total views and average video length. A higher percentage means your content holds attention longer, which drives more watch hours per view.
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* CTA Banner */}
         <div className="cta-banner mb-8">
