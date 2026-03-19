@@ -51,28 +51,28 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
   const yAxisLabel = view === 'subscribers' ? 'Subscribers' : view === 'watchHours' ? 'Watch Hours' : 'Weeks to Goal';
 
   // Filter data by selected time range and add timestamps for proper time-based x-axis
+  // Time range controls how much HISTORY is shown, but projections are ALWAYS included
   const filteredData = useMemo((): ChartDataPoint[] => {
     const rangeDef = TIME_RANGES.find(r => r.key === timeRange);
 
-    let result: ProjectionPoint[];
+    // Always include all projection data (everything after last historical date)
+    const projectionData = data.filter(d => d.date > lastHistoricalDate);
+
+    let historicalData: ProjectionPoint[];
     if (!rangeDef || rangeDef.days === null) {
-      result = data;
+      // "All" — show all history
+      historicalData = data.filter(d => d.date <= lastHistoricalDate);
     } else {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - rangeDef.days);
       const cutoffStr = cutoffDate.toISOString().split('T')[0];
 
-      const historicalInRange = data.filter(
+      historicalData = data.filter(
         d => d.date >= cutoffStr && d.date <= lastHistoricalDate
       );
-
-      if (timeRange === '1Y') {
-        const projectionData = data.filter(d => d.date > lastHistoricalDate);
-        result = [...historicalInRange, ...projectionData];
-      } else {
-        result = historicalInRange;
-      }
     }
+
+    const result = [...historicalData, ...projectionData];
 
     // Thin out dense historical data for smoother chart rendering
     // For ranges > 6 months, sample every 3rd day for historical data
