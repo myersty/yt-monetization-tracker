@@ -211,7 +211,7 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
   };
 
   return (
-    <div className="w-full rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)]">
+    <div className="card w-full p-6">
       {/* Header + Toggle + Time Range */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <h3 className="text-heading-gradient font-[family-name:var(--font-display)] font-medium text-xl">

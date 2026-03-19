@@ -61,7 +61,7 @@ export default function CountdownCard({ projections, currentSubscribers = 0, tot
   const stage = getStageEmoji(alreadyMonetizable ? 100 : overallProgress);
 
   return (
-    <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)] card-pattern min-h-[320px] flex flex-col">
+    <div className="card p-6 min-h-[320px] flex flex-col">
       <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-3">
         Estimated Monetization Date
       </p>

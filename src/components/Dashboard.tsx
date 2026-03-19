@@ -45,7 +45,25 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
   const shortsBreakdown = data.shortsBreakdown;
 
   return (
-    <div className="min-h-screen bg-[var(--gray-50)]">
+    <div className="min-h-screen bg-[var(--gray-50)] relative">
+      {/* Ambient background effects */}
+      <div className="ambient-glow-1" />
+      <div className="ambient-glow-2" />
+      <div className="ambient-bg">
+        {[...Array(12)].map((_, i) => (
+          <div
+            key={i}
+            className="ambient-dot"
+            style={{
+              left: `${10 + (i * 7.5) % 85}%`,
+              top: `${5 + (i * 13) % 90}%`,
+              animationDelay: `${i * 1.1}s`,
+              animationDuration: `${10 + (i % 4) * 3}s`,
+            }}
+          />
+        ))}
+      </div>
+
       {/* Minimal header for CSV mode */}
       {!isOAuthDashboard && (
         <div className="max-w-6xl mx-auto px-6 pt-6 pb-2">
@@ -88,7 +106,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
         )}
 
         {/* Progress Rings */}
-        <div className="mb-8 animate-fade-in-up">
+        <div className="mb-14 animate-fade-in-up">
           <ProgressRings
             currentSubscribers={data.totals.currentSubscribers}
             totalWatchHours={data.totals.totalWatchTimeHours}
@@ -96,7 +114,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
         </div>
 
         {/* Countdown + Velocity Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-14">
           <div className="animate-fade-in-up-delay-1">
             <CountdownCard
               projections={projections}
@@ -116,8 +134,11 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
           </div>
         </div>
 
+        {/* Section divider */}
+        <div className="section-divider mb-14" />
+
         {/* Content Metrics + Path to Monetization */}
-        <div className="mb-8 animate-fade-in-up-delay-3">
+        <div className="mb-14 animate-fade-in-up-delay-3">
           <ContentMetrics
             daily={data.daily}
             currentSubscribers={data.totals.currentSubscribers}
@@ -127,9 +148,12 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
           />
         </div>
 
+        {/* Section divider */}
+        <div className="section-divider mb-14" />
+
         {/* Timeline Chart */}
         {chartData.length > 0 && (
-          <div className="mb-8 animate-fade-in-up-delay-4">
+          <div className="mb-14 animate-fade-in-up-delay-4">
             <TimelineChart
               data={chartData}
               daily={data.daily}
@@ -140,7 +164,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
         )}
 
         {/* Bottom Row: Milestones + What-If */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-14">
           <MilestoneMarkers
             currentSubscribers={data.totals.currentSubscribers}
             totalWatchHours={data.totals.totalWatchTimeHours}
@@ -160,7 +184,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
 
         {/* Outlier Alerts */}
         {outliers.length > 0 && (
-          <div className="mb-8 rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)]">
+          <div className="card p-6 mb-14">
             <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-3">
               Viral Spike Detection
             </p>
@@ -187,7 +211,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
         )}
 
         {/* Channel Overview */}
-        <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)]">
+        <div className="card p-6">
           <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-4">
             Channel Overview
           </p>
@@ -221,7 +245,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
         />
 
         {/* How It Works / FAQ Section */}
-        <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)] mb-8">
+        <div className="card p-6 mb-14">
           <h3 className="text-heading-gradient font-[family-name:var(--font-display)] font-medium text-xl mb-6">
             How Your Data Is Calculated
           </h3>
@@ -258,7 +282,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
         </div>
 
         {/* CTA Banner */}
-        <div className="cta-banner mb-8">
+        <div className="cta-banner mb-14">
           <h2 className="text-heading-gradient font-[family-name:var(--font-display)] text-2xl sm:text-3xl font-medium mb-3">
             Scale Your YouTube Channel Faster
           </h2>

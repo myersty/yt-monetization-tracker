@@ -33,7 +33,7 @@ export default function MilestoneMarkers({ currentSubscribers, totalWatchHours }
   );
 
   return (
-    <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)]">
+    <div className="card p-6">
       <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-4">
         Milestones
       </p>

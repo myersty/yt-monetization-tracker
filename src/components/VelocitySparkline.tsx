@@ -58,7 +58,7 @@ export default function VelocityCard({ daily, availableMetrics }: VelocityCardPr
   };
 
   return (
-    <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-5 shadow-[var(--card-shadow)] min-h-[320px] flex flex-col">
+    <div className="card p-5 min-h-[320px] flex flex-col">
       {/* Header with tabs */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex bg-[var(--gray-100)] rounded-full p-0.5">
@@ -109,9 +109,9 @@ export default function VelocityCard({ daily, availableMetrics }: VelocityCardPr
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={metricData.data} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
             <defs>
-              <linearGradient id="sparkGradVelocity" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={metricData.trendColor} stopOpacity={0.5} />
-                <stop offset="100%" stopColor={metricData.trendColor} stopOpacity={0.1} />
+              <linearGradient id={`sparkGrad-${activeTab}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={metricData.trendColor} stopOpacity={0.6} />
+                <stop offset="100%" stopColor={metricData.trendColor} stopOpacity={0.15} />
               </linearGradient>
             </defs>
             <XAxis dataKey="date" hide />
@@ -132,7 +132,7 @@ export default function VelocityCard({ daily, availableMetrics }: VelocityCardPr
               type="monotone"
               dataKey="value"
               stroke={metricData.trendColor}
-              fill="url(#sparkGradVelocity)"
+              fill={`url(#sparkGrad-${activeTab})`}
               strokeWidth={2}
               dot={false}
               animationDuration={300}

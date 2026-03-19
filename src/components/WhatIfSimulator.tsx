@@ -96,7 +96,7 @@ export default function WhatIfSimulator({
   }, [projection.dailyNewSubs, projection.dailyWatchHours, onRatesChange]);
 
   return (
-    <div className="rounded-[var(--card-radius)] border border-white/6 bg-[var(--card-bg)] p-6 shadow-[var(--card-shadow)]">
+    <div className="card p-6">
       <div className="flex items-center justify-between mb-1">
         <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient">
           What-If Simulator
