@@ -23,11 +23,18 @@ type WeeksToGoalPoint = {
 
 type ChartDataPoint = ProjectionPoint & { timestamp: number };
 
+type WhatIfRatesType = {
+  dailyNewSubs: number;
+  dailyWatchHours: number;
+};
+
 type TimelineChartProps = {
   data: ProjectionPoint[];
   daily: DailyMetrics[];
   lastHistoricalDate: string;
   currentSubscribers: number;
+  totalWatchTimeHours?: number;
+  whatIfRates?: WhatIfRatesType;
 };
 
 type MetricView = 'subscribers' | 'watchtime' | 'weekstogoal';
@@ -41,7 +48,7 @@ const TIME_RANGES: { key: TimeRange; label: string; days: number | null }[] = [
   { key: 'All', label: 'All', days: null },
 ];
 
-export default function TimelineChart({ data, daily, lastHistoricalDate, currentSubscribers }: TimelineChartProps) {
+export default function TimelineChart({ data, daily, lastHistoricalDate, currentSubscribers, totalWatchTimeHours, whatIfRates }: TimelineChartProps) {
   const [view, setView] = useState<MetricView>('subscribers');
   const [timeRange, setTimeRange] = useState<TimeRange>('All');
 
@@ -185,17 +192,73 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
     return points;
   }, [daily]);
 
+  // Project Weeks to Goal forward using What-If rates (or current pace)
+  // This extends the historical data with projected points trending toward 0
+  const weeksToGoalWithProjection = useMemo(() => {
+    if (weeksToGoalData.length === 0) return weeksToGoalData;
+
+    const lastPoint = weeksToGoalData[weeksToGoalData.length - 1];
+    const lastDate = new Date(lastPoint.date + 'T00:00:00');
+    const lastSubWeeks = lastPoint.weeksToSubGoal ?? 0;
+    const lastHourWeeks = lastPoint.weeksToHoursGoal ?? 0;
+
+    // If both are already 0, no projection needed
+    if (lastSubWeeks <= 0 && lastHourWeeks <= 0) return weeksToGoalData;
+
+    // Use what-if rates to project weekly progress
+    const weeklySubGain = (whatIfRates?.dailyNewSubs ?? 0) * 7;
+    const weeklyHourGain = (whatIfRates?.dailyWatchHours ?? 0) * 7;
+
+    // Current state
+    const lastDayData = daily[daily.length - 1];
+    let projectedSubs = lastDayData?.subscribers ?? currentSubscribers;
+    const cumWatchHours = totalWatchTimeHours ?? 0;
+    let projectedHours = cumWatchHours;
+
+    const projectionPoints: WeeksToGoalPoint[] = [];
+    const maxProjectionWeeks = Math.max(lastSubWeeks, lastHourWeeks) + 5; // extend a bit past zero
+
+    for (let w = 1; w <= Math.min(maxProjectionWeeks, 104); w++) { // cap at 2 years
+      const futureDate = new Date(lastDate);
+      futureDate.setDate(futureDate.getDate() + w * 7);
+      const dateStr = futureDate.toISOString().split('T')[0];
+
+      projectedSubs += weeklySubGain;
+      projectedHours += weeklyHourGain;
+
+      const remainingSubs = Math.max(0, 1000 - projectedSubs);
+      const remainingHours = Math.max(0, 4000 - projectedHours);
+
+      const weeksToSubGoal = remainingSubs === 0 ? 0
+        : weeklySubGain > 0 ? remainingSubs / weeklySubGain : 500;
+      const weeksToHoursGoal = remainingHours === 0 ? 0
+        : weeklyHourGain > 0 ? remainingHours / weeklyHourGain : 500;
+
+      projectionPoints.push({ date: dateStr, weeksToSubGoal, weeksToHoursGoal });
+
+      // Stop once both hit zero
+      if (weeksToSubGoal <= 0 && weeksToHoursGoal <= 0) break;
+    }
+
+    return [...weeksToGoalData, ...projectionPoints];
+  }, [weeksToGoalData, whatIfRates, daily, currentSubscribers, totalWatchTimeHours]);
+
   // Filter weeks-to-goal data by time range
   const filteredWeeksData = useMemo(() => {
     const rangeDef = TIME_RANGES.find(r => r.key === timeRange);
-    if (!rangeDef || rangeDef.days === null) return weeksToGoalData;
+    if (!rangeDef || rangeDef.days === null) return weeksToGoalWithProjection;
 
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - rangeDef.days);
-    const cutoffStr = cutoffDate.toISOString().split('T')[0];
+    const anchor = new Date(lastHistoricalDate + 'T00:00:00');
+    const pastCutoff = new Date(anchor);
+    pastCutoff.setDate(pastCutoff.getDate() - rangeDef.days);
+    const pastStr = pastCutoff.toISOString().split('T')[0];
 
-    return weeksToGoalData.filter(d => d.date >= cutoffStr);
-  }, [weeksToGoalData, timeRange]);
+    const futureCutoff = new Date(anchor);
+    futureCutoff.setDate(futureCutoff.getDate() + rangeDef.days);
+    const futureStr = futureCutoff.toISOString().split('T')[0];
+
+    return weeksToGoalWithProjection.filter(d => d.date >= pastStr && d.date <= futureStr);
+  }, [weeksToGoalWithProjection, timeRange, lastHistoricalDate]);
 
   // Always show projections regardless of time range
   const showProjections = true;

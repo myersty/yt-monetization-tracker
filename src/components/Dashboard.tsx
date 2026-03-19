@@ -165,6 +165,8 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
               daily={data.daily}
               lastHistoricalDate={data.dateRange.end}
               currentSubscribers={data.totals.currentSubscribers}
+              totalWatchTimeHours={data.totals.totalWatchTimeHours}
+              whatIfRates={effectiveWhatIfRates}
             />
           </div>
         )}
