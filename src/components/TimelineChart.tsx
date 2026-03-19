@@ -48,7 +48,7 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
   const goal = view === 'subscribers' ? 1000 : 4000;
   const goalLabel = view === 'subscribers' ? '1,000 Subscribers' : '4,000 Watch Hours';
   const dataKey = view === 'subscribers' ? 'subscribers' : 'watchTimeHours';
-  const yAxisLabel = view === 'subscribers' ? 'Subscribers' : view === 'watchHours' ? 'Watch Hours' : 'Weeks to Goal';
+  const yAxisLabel = view === 'subscribers' ? 'Subscribers' : view === 'watchtime' ? 'Watch Hours' : 'Weeks to Goal';
 
   // Filter data by selected time range and add timestamps for proper time-based x-axis
   // Time range controls how much HISTORY is shown, but projections are ALWAYS included
