@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { ParsedData } from '@/lib/types';
 import { calculateProjections, generateProjectionPoints, detectOutliers } from '@/lib/projections';
+import { useScrollReveal } from '@/lib/useScrollReveal';
 import ProgressRings from './ProgressRings';
 import TimelineChart from './TimelineChart';
 import CountdownCard from './CountdownCard';
@@ -29,6 +30,8 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
   const currentProjection = projections.find(p => p.model === 'current');
   const currentSubsPerDay = currentProjection?.subscriberProjection.dailyRate || 0;
   const currentHoursPerDay = currentProjection?.watchTimeProjection.dailyRate || 0;
+
+  useScrollReveal();
 
   // What-If defaults to current pace so both lines overlap until sliders are moved
   const [whatIfRates, setWhatIfRates] = useState<WhatIfRates>(null);
@@ -112,7 +115,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
         )}
 
         {/* Progress Rings */}
-        <div className="mb-14 animate-fade-in-up">
+        <div className="mb-16 v2-reveal">
           <ProgressRings
             currentSubscribers={data.totals.currentSubscribers}
             totalWatchHours={data.totals.totalWatchTimeHours}
@@ -120,31 +123,27 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
         </div>
 
         {/* Countdown + Velocity Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-14">
-          <div className="animate-fade-in-up-delay-1">
-            <CountdownCard
-              projections={projections}
-              currentSubscribers={data.totals.currentSubscribers}
-              totalWatchHours={data.totals.totalWatchTimeHours}
-            />
-          </div>
-          <div className="animate-fade-in-up-delay-2">
-            <VelocityCard
-              daily={data.daily}
-              availableMetrics={[
-                ...(hasSubData ? ['subscribers' as const] : []),
-                ...(hasWatchData ? ['watchtime' as const] : []),
-                ...(hasViewData ? ['views' as const] : []),
-              ]}
-            />
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-16 v2-reveal">
+          <CountdownCard
+            projections={projections}
+            currentSubscribers={data.totals.currentSubscribers}
+            totalWatchHours={data.totals.totalWatchTimeHours}
+          />
+          <VelocityCard
+            daily={data.daily}
+            availableMetrics={[
+              ...(hasSubData ? ['subscribers' as const] : []),
+              ...(hasWatchData ? ['watchtime' as const] : []),
+              ...(hasViewData ? ['views' as const] : []),
+            ]}
+          />
         </div>
 
         {/* Section divider */}
-        <div className="section-divider mb-14" />
+        <div className="section-divider mb-16" />
 
         {/* Content Metrics + Path to Monetization */}
-        <div className="mb-14 animate-fade-in-up-delay-3">
+        <div className="mb-16 v2-reveal">
           <ContentMetrics
             daily={data.daily}
             currentSubscribers={data.totals.currentSubscribers}
@@ -155,11 +154,12 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
         </div>
 
         {/* Section divider */}
-        <div className="section-divider mb-14" />
+        <div className="section-divider mb-16" />
 
         {/* Timeline Chart */}
         {chartData.length > 0 && (
-          <div className="mb-14 animate-fade-in-up-delay-4">
+          <div className="mb-16 v2-reveal">
+            <span className="section-badge mb-4 inline-block">Growth Timeline</span>
             <TimelineChart
               data={chartData}
               daily={data.daily}
@@ -171,8 +171,11 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
           </div>
         )}
 
-        {/* Bottom Row: Milestones + What-If */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-14">
+        {/* Milestones + What-If */}
+        <div className="v2-reveal mb-4">
+          <span className="section-badge mb-4 inline-block">Milestones &amp; Simulation</span>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-16 v2-reveal">
           <MilestoneMarkers
             currentSubscribers={data.totals.currentSubscribers}
             totalWatchHours={data.totals.totalWatchTimeHours}
@@ -192,7 +195,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
 
         {/* Outlier Alerts */}
         {outliers.length > 0 && (
-          <div className="card p-6 mb-14">
+          <div className="card p-6 mb-16 v2-reveal">
             <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-3">
               Viral Spike Detection
             </p>
@@ -219,10 +222,10 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
         )}
 
         {/* Channel Overview */}
-        <div className="card p-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-4">
-            Channel Overview
-          </p>
+        <div className="v2-reveal mb-4">
+          <span className="section-badge mb-4 inline-block">Channel Overview</span>
+        </div>
+        <div className="card p-6 mb-16 v2-reveal">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <StatBlock label="Tracking Period" value={`${data.daily.length} days`} />
             <StatBlock label="Total Views" value={data.totals.totalViews.toLocaleString()} />
@@ -241,19 +244,21 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
         </div>
 
         {/* Personalized Recommendations */}
-        <RecommendationsCard
-          avgVideoDurationMinutes={data.avgVideoDurationMinutes}
-          avgViewsPerVideo={data.avgViewsPerVideo}
-          averageViewPercentage={data.averageViewPercentage}
-          postingCadenceDays={data.postingCadenceDays}
-          currentSubscribers={data.totals.currentSubscribers}
-          totalWatchHours={data.totals.totalWatchTimeHours}
-          avgWatchHoursPerVideo={data.avgWatchHoursPerVideo}
-          videosLast90Days={data.videosLast90Days}
-        />
+        <div className="v2-reveal">
+          <RecommendationsCard
+            avgVideoDurationMinutes={data.avgVideoDurationMinutes}
+            avgViewsPerVideo={data.avgViewsPerVideo}
+            averageViewPercentage={data.averageViewPercentage}
+            postingCadenceDays={data.postingCadenceDays}
+            currentSubscribers={data.totals.currentSubscribers}
+            totalWatchHours={data.totals.totalWatchTimeHours}
+            avgWatchHoursPerVideo={data.avgWatchHoursPerVideo}
+            videosLast90Days={data.videosLast90Days}
+          />
+        </div>
 
         {/* How It Works / FAQ Section */}
-        <div className="card p-6 mb-14">
+        <div className="card p-6 mb-16 v2-reveal">
           <h3 className="text-heading-gradient font-[family-name:var(--font-display)] font-medium text-xl mb-6">
             How Your Data Is Calculated
           </h3>
@@ -290,7 +295,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
         </div>
 
         {/* CTA Banner */}
-        <div className="cta-banner mb-14">
+        <div className="cta-banner mb-16 v2-reveal-scale">
           <h2 className="text-heading-gradient font-[family-name:var(--font-display)] text-2xl sm:text-3xl font-medium mb-3">
             Scale Your YouTube Channel Faster
           </h2>

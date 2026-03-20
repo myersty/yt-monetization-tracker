@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { DailyMetrics } from '@/lib/types';
+import { useCountUp } from '@/lib/useCountUp';
 
 type MetricTab = 'subscribers' | 'watchtime' | 'views';
 
@@ -102,6 +103,7 @@ export default function VelocityCard({ daily, availableMetrics }: VelocityCardPr
   const [activeTab, setActiveTab] = useState<MetricTab>(availableMetrics[0]);
 
   const metricData = useMemo(() => getMetricData(daily, activeTab), [daily, activeTab]);
+  const animatedTotal = useCountUp(Math.round(metricData.totalGained), 800, 200);
 
   return (
     <div className="card ring-base ring-bl p-5 min-h-[320px] flex flex-col">
@@ -145,8 +147,8 @@ export default function VelocityCard({ daily, availableMetrics }: VelocityCardPr
           {TAB_CONFIG[activeTab].label} gained (90 days)
         </p>
         <div className="flex items-baseline gap-3">
-          <p className="font-[family-name:var(--font-display)] font-bold text-2xl">
-            +{Math.round(metricData.totalGained).toLocaleString()}
+          <p className="font-[family-name:var(--font-display)] font-bold text-3xl">
+            +{animatedTotal.toLocaleString()}
           </p>
           <p className="text-[var(--gray-500)] text-sm">
             ~{metricData.dailyAvg < 1 ? metricData.dailyAvg.toFixed(1) : Math.round(metricData.dailyAvg).toLocaleString()}/day avg

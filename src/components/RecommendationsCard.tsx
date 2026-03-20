@@ -209,8 +209,12 @@ export default function RecommendationsCard(props: RecommendationsCardProps) {
             key={i}
             className={`border-l-2 ${priorityColors[rec.priority]} pl-4 py-2`}
           >
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-base">{rec.icon}</span>
+            <div className="flex items-center gap-2.5 mb-1">
+              <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0 ${
+                rec.priority === 'high' ? 'bg-[var(--gold)]/10' :
+                rec.priority === 'low' ? 'bg-[#2E7D32]/10' :
+                'bg-[var(--gray-200)]'
+              }`}>{rec.icon}</span>
               <p className="text-sm font-semibold">{rec.title}</p>
             </div>
             <p className="text-xs text-[var(--gray-500)] leading-relaxed">

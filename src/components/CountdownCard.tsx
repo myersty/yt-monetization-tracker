@@ -1,6 +1,7 @@
 'use client';
 
 import { Projection } from '@/lib/types';
+import { useCountUp } from '@/lib/useCountUp';
 
 type CountdownCardProps = {
   projections: Projection[];
@@ -84,12 +85,12 @@ export default function CountdownCard({ projections, currentSubscribers = 0, tot
           {/* Primary projection */}
           <div className="text-center py-4">
             <span className={`${stage.size} leading-none`}>{stage.emoji}</span>
-            <p className="text-2xl font-bold font-[family-name:var(--font-display)] text-[var(--foreground)] mt-2">
+            <p className="text-heading-gradient text-3xl sm:text-4xl font-bold font-[family-name:var(--font-display)] mt-2">
               {formatDate(primaryDate || null)}
             </p>
             {primaryDays !== null && primaryDays > 0 && (
-              <p className="text-accent-gradient font-semibold text-lg mt-1">
-                {primaryDays} days away
+              <p className="text-accent-gradient font-semibold text-xl mt-2">
+                <CountUpDays target={primaryDays} /> days away
               </p>
             )}
             <p className="text-[var(--gray-500)] text-xs mt-1">
@@ -109,6 +110,11 @@ export default function CountdownCard({ projections, currentSubscribers = 0, tot
       )}
     </div>
   );
+}
+
+function CountUpDays({ target }: { target: number }) {
+  const value = useCountUp(target, 800, 300);
+  return <>{value}</>;
 }
 
 function ProjectionEstimate({

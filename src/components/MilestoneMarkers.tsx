@@ -77,12 +77,13 @@ export default function MilestoneMarkers({ currentSubscribers, totalWatchHours }
                   {milestone.label}
                 </p>
                 {!achieved && (
-                  <div className="mt-1 h-1.5 bg-[var(--gray-200)] rounded-full overflow-hidden">
+                  <div className="mt-1.5 h-[3px] bg-[var(--gray-200)] rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-1000"
                       style={{
                         width: `${progress * 100}%`,
                         backgroundColor: isNext ? 'var(--gold)' : 'var(--gray-400)',
+                        boxShadow: isNext ? '0 0 8px rgba(255, 107, 0, 0.5)' : 'none',
                       }}
                     />
                   </div>

@@ -59,6 +59,13 @@ body {
   background: var(--background);
   color: var(--foreground);
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: rgba(255, 107, 0, 0.25);
+  color: white;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -88,11 +95,11 @@ h2 {
     rgba(26, 26, 26, 0.6);
   backdrop-filter: blur(12px);
   box-shadow: var(--card-shadow), var(--glow-subtle);
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.5s ease;
 }
 
 .card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 60px rgba(255, 107, 0, 0.06);
   border-color: rgba(255,255,255,0.1);
 }
@@ -387,6 +394,11 @@ h2 {
 }
 
 /* ─── RECHARTS ────────────────────────────────────────────────────────── */
+
+.recharts-area-curve,
+.recharts-line-curve {
+  filter: drop-shadow(0 0 3px currentColor);
+}
 
 .recharts-default-tooltip {
   background: var(--card-bg-solid) !important;
@@ -728,12 +740,12 @@ h2 {
     radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 60%),
     rgba(26, 26, 26, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.3s ease;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.5s ease, box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .v2-feature-card:hover,
 .v2-option-card:hover {
-  transform: translateY(-5px) !important;
+  transform: translateY(-4px) !important;
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
 }
@@ -791,7 +803,7 @@ h2 {
     rgba(26, 26, 26, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.05);
   text-align: center;
-  transition: all 0.3s ease;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.5s ease, box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 
@@ -1230,9 +1242,55 @@ h2 {
   border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
-/* ─── V2 Dashboard: Slider accent — keep on interactive elements ────── */
+/* ─── V2 Dashboard: Custom Range Sliders ──────────────────────────────── */
 .v2 input[type="range"] {
-  accent-color: var(--gold);
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--gray-200);
+  outline: none;
+  cursor: pointer;
+}
+
+.v2 input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--gold);
+  box-shadow: 0 0 10px rgba(255, 107, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.3);
+  cursor: grab;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.v2 input[type="range"]::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 16px rgba(255, 107, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
+  transform: scale(1.1);
+}
+
+.v2 input[type="range"]::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(0.95);
+}
+
+.v2 input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--gray-200);
+}
+
+.v2 input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--gold);
+  box-shadow: 0 0 10px rgba(255, 107, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.3);
+  cursor: grab;
 }
 
 /* ─── V2 Dashboard: Keep gradient on primary CTA buttons only ────────── */
@@ -1242,4 +1300,22 @@ h2 {
 
 .v2 .btn-gradient:hover {
   box-shadow: 0 0 24px rgba(255, 107, 0, 0.25);
+}
+
+/* ─── V2 Dashboard: Progress Bar Glow ─────────────────────────────────── */
+.progress-glow {
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* ─── V2 Dashboard: Skeleton Shimmer ──────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
 }

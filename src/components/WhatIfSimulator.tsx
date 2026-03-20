@@ -148,7 +148,7 @@ export default function WhatIfSimulator({
             max={30}
             value={daysBetweenPosts}
             onChange={e => { setDaysBetweenPosts(Number(e.target.value)); setUserHasAdjusted(true); }}
-            className="w-full accent-[var(--gold)]"
+            className="w-full"
           />
           <div className="flex justify-between text-[10px] text-[var(--gray-500)]">
             <span>1 day</span>
@@ -175,7 +175,7 @@ export default function WhatIfSimulator({
             max={60}
             value={avgVideoMinutes}
             onChange={e => { setAvgVideoMinutes(Number(e.target.value)); setUserHasAdjusted(true); }}
-            className="w-full accent-[var(--gold)]"
+            className="w-full"
           />
           <div className="flex justify-between text-[10px] text-[var(--gray-500)]">
             <span>3 min</span>
@@ -203,7 +203,7 @@ export default function WhatIfSimulator({
             step={50}
             value={avgViewsPerVideo}
             onChange={e => { setAvgViewsPerVideo(Number(e.target.value)); setUserHasAdjusted(true); }}
-            className="w-full accent-[var(--gold)]"
+            className="w-full"
           />
           <div className="flex justify-between text-[10px] text-[var(--gray-500)]">
             <span>50</span>
@@ -231,14 +231,14 @@ export default function WhatIfSimulator({
         {projection.daysToMonetization !== null && projection.daysToMonetization > 0 ? (
           <div className="text-center">
             <p className="text-sm text-[var(--gray-600)] mb-1">With this schedule, you&apos;d hit monetization by</p>
-            <p className="text-2xl font-bold font-[family-name:var(--font-display)] text-[var(--foreground)]">
+            <p className="text-heading-gradient text-3xl font-bold font-[family-name:var(--font-display)]">
               {projection.estimatedDate?.toLocaleDateString('en-US', {
                 month: 'long',
                 day: 'numeric',
                 year: 'numeric',
               })}
             </p>
-            <p className="text-accent-gradient font-semibold mt-1">
+            <p className="text-accent-gradient font-semibold text-lg mt-1">
               ~{projection.daysToMonetization} days
             </p>
             <div className="flex justify-center gap-6 mt-3 text-xs text-[var(--gray-500)]">

@@ -157,7 +157,7 @@ export default function ContentMetrics({
             {/* Hero: Estimated timeline */}
             {weeksToMonetization !== null && weeksToMonetization > 0 && (
               <div className="text-center py-3 px-4 rounded-xl bg-[var(--gray-50)] border border-[var(--gray-200)]">
-                <p className="text-3xl font-bold font-[family-name:var(--font-display)] text-accent-gradient">
+                <p className="text-4xl font-bold font-[family-name:var(--font-display)] text-accent-gradient">
                   ~{weeksToMonetization} weeks
                 </p>
                 {estimatedDate && (
@@ -293,13 +293,13 @@ function ProgressRow({
           <span className="ml-1.5 text-[var(--gray-400)]">({pct}%)</span>
         </span>
       </div>
-      <div className="w-full h-2 rounded-full bg-[var(--gray-100)] overflow-hidden">
+      <div className="w-full h-[3px] rounded-full bg-[var(--gray-200)] overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-700 ease-in-out"
           style={{
             width: `${pct}%`,
             background: color,
-            opacity: 0.85,
+            boxShadow: `0 0 8px ${color}`,
           }}
         />
       </div>

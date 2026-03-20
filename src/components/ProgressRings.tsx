@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useCountUp } from '@/lib/useCountUp';
 
 type ProgressRingsProps = {
   currentSubscribers: number;
@@ -108,19 +109,23 @@ export default function ProgressRings({
   const subsPercent = Math.min(Math.round((currentSubscribers / subscriberGoal) * 100), 100);
   const hoursPercent = Math.min(Math.round((totalWatchHours / watchHoursGoal) * 100), 100);
 
+  const animatedSubs = useCountUp(currentSubscribers, 900, 200);
+  const animatedHours = useCountUp(Math.round(totalWatchHours), 900, 400);
+  const animatedPercent = useCountUp(Math.round(Math.min(((subsPercent + hoursPercent) / 2), 100)), 800, 600);
+
   return (
     <div className="flex items-center justify-center gap-6 sm:gap-10">
       {/* Left — Subscribers */}
       <div className="flex flex-col items-end text-right">
         <div className="flex items-center gap-2 mb-1">
           <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'linear-gradient(135deg, #FFC83B, #FF6B00)' }} />
-          <p className="text-xs uppercase tracking-wider text-[var(--gray-600)] font-semibold">
+          <p className="text-[11px] uppercase tracking-wider text-[var(--gray-500)] font-semibold">
             Subscribers
           </p>
         </div>
         <div className="flex items-baseline gap-1 whitespace-nowrap">
-          <span className="font-[family-name:var(--font-display)] font-bold text-3xl sm:text-4xl text-[var(--foreground)]">
-            {currentSubscribers.toLocaleString()}
+          <span className="font-[family-name:var(--font-display)] font-bold text-4xl sm:text-5xl text-[var(--foreground)]">
+            {animatedSubs.toLocaleString()}
           </span>
           <span className="text-sm text-[var(--gray-500)]">/ {subscriberGoal.toLocaleString()}</span>
         </div>
@@ -178,8 +183,8 @@ export default function ProgressRings({
 
         {/* Center text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <p className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-display)] text-[var(--foreground)]">
-            {Math.round(Math.min(((subsPercent + hoursPercent) / 2), 100))}%
+          <p className="text-3xl sm:text-4xl font-bold font-[family-name:var(--font-display)] text-[var(--foreground)]">
+            {animatedPercent}%
           </p>
           <p className="text-[10px] sm:text-xs uppercase tracking-wider text-[var(--gray-600)] font-semibold mt-1">
             To Monetization
@@ -191,13 +196,13 @@ export default function ProgressRings({
       <div className="flex flex-col items-start text-left">
         <div className="flex items-center gap-2 mb-1">
           <span className="w-2.5 h-2.5 rounded-full bg-[#1565C0]" />
-          <p className="text-xs uppercase tracking-wider text-[var(--gray-600)] font-semibold">
+          <p className="text-[11px] uppercase tracking-wider text-[var(--gray-500)] font-semibold">
             Watch Hours
           </p>
         </div>
         <div className="flex items-baseline gap-1 whitespace-nowrap">
-          <span className="font-[family-name:var(--font-display)] font-bold text-3xl sm:text-4xl text-[var(--foreground)]">
-            {Math.round(totalWatchHours).toLocaleString()}
+          <span className="font-[family-name:var(--font-display)] font-bold text-4xl sm:text-5xl text-[var(--foreground)]">
+            {animatedHours.toLocaleString()}
           </span>
           <span className="text-sm text-[var(--gray-500)]">/ {watchHoursGoal.toLocaleString()}</span>
         </div>
