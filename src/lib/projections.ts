@@ -29,10 +29,6 @@ function linearRegression(points: { x: number; y: number }[]): { slope: number; 
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
-function daysBetween(a: string, b: string): number {
-  return (new Date(b).getTime() - new Date(a).getTime()) / (1000 * 60 * 60 * 24);
-}
-
 function addDays(date: string, days: number): Date {
   const d = new Date(date);
   d.setDate(d.getDate() + days);
@@ -44,12 +40,9 @@ function formatDate(d: Date): string {
 }
 
 function getCumulativeSubscribers(daily: DailyMetrics[]): number[] {
-  // If we already have cumulative data, use it
   if (daily.some(d => (d.subscribers || 0) > 50)) {
     return daily.map(d => d.subscribers || 0);
   }
-
-  // Build cumulative from gains/losses
   let cum = 0;
   return daily.map(d => {
     cum += (d.subscribersGained || 0) - Math.abs(d.subscribersLost || 0);
@@ -65,12 +58,58 @@ function getCumulativeWatchHours(daily: DailyMetrics[]): number[] {
   });
 }
 
+// ─── Curved Projection Math ──────────────────────────────────────────────
+// Projects a metric forward with acceleration that dampens over time.
+// rate(day) = baseRate + acceleration * (1 - e^(-day/halfLife)) * halfLife
+// This curves up if accelerating, flattens out over ~90 days.
+
+const DAMPING_HALF_LIFE = 90; // acceleration effect flattens over ~90 days
+
+/** Cumulative gain after `days` with dampened acceleration */
+function curvedCumulative(baseRate: number, acceleration: number, days: number): number {
+  if (acceleration === 0 || days === 0) return baseRate * days;
+
+  // Integral of: baseRate + acceleration * halfLife * (1 - e^(-t/halfLife))
+  // = baseRate*t + acceleration*halfLife * (t + halfLife*e^(-t/halfLife) - halfLife)
+  const h = DAMPING_HALF_LIFE;
+  const t = days;
+  return baseRate * t + acceleration * h * (t + h * Math.exp(-t / h) - h);
+}
+
+/** Find days until curvedCumulative reaches `target` (binary search) */
+function daysToReachTarget(baseRate: number, acceleration: number, target: number): number | null {
+  if (target <= 0) return 0;
+  if (baseRate <= 0 && acceleration <= 0) return null;
+
+  // Upper bound: try linear estimate first, then expand if needed
+  let lo = 0;
+  let hi = baseRate > 0 ? Math.ceil(target / baseRate) * 3 : 3650;
+  hi = Math.max(hi, 365);
+  hi = Math.min(hi, 3650); // cap at 10 years
+
+  // Make sure hi is actually enough
+  if (curvedCumulative(baseRate, acceleration, hi) < target) {
+    return null; // can't reach in 10 years
+  }
+
+  // Binary search
+  for (let i = 0; i < 50; i++) {
+    const mid = (lo + hi) / 2;
+    if (curvedCumulative(baseRate, acceleration, mid) >= target) {
+      hi = mid;
+    } else {
+      lo = mid;
+    }
+  }
+
+  return Math.ceil(hi);
+}
+
 // ─── Outlier Detection ──────────────────────────────────────────────────
 
 export function detectOutliers(daily: DailyMetrics[]): OutlierInfo[] {
   const outliers: OutlierInfo[] = [];
 
-  // Subscriber outliers
   const subGains = daily.map(d => d.subscribersGained || 0).filter(v => v > 0);
   if (subGains.length > 7) {
     const mean = subGains.reduce((a, b) => a + b, 0) / subGains.length;
@@ -87,7 +126,6 @@ export function detectOutliers(daily: DailyMetrics[]): OutlierInfo[] {
     }
   }
 
-  // Watch time outliers
   const wtValues = daily.map(d => d.watchTimeHours || 0).filter(v => v > 0);
   if (wtValues.length > 7) {
     const mean = wtValues.reduce((a, b) => a + b, 0) / wtValues.length;
@@ -107,6 +145,31 @@ export function detectOutliers(daily: DailyMetrics[]): OutlierInfo[] {
   return outliers;
 }
 
+// ─── Compute Acceleration from 90-Day Window ─────────────────────────────
+// Split last 90 days into two 45-day halves, compare avg daily rates.
+
+function computeAcceleration(recentDays: DailyMetrics[]): { subAccel: number; hourAccel: number } {
+  const mid = Math.floor(recentDays.length / 2);
+  const firstHalf = recentDays.slice(0, mid);
+  const secondHalf = recentDays.slice(mid);
+
+  const firstSubRate = firstHalf.reduce((s, d) =>
+    s + (d.subscribersGained || 0) - Math.abs(d.subscribersLost || 0), 0) / (firstHalf.length || 1);
+  const secondSubRate = secondHalf.reduce((s, d) =>
+    s + (d.subscribersGained || 0) - Math.abs(d.subscribersLost || 0), 0) / (secondHalf.length || 1);
+
+  const firstHourRate = firstHalf.reduce((s, d) => s + (d.watchTimeHours || 0), 0) / (firstHalf.length || 1);
+  const secondHourRate = secondHalf.reduce((s, d) => s + (d.watchTimeHours || 0), 0) / (secondHalf.length || 1);
+
+  // Acceleration = change in daily rate per day over the half-window
+  // Normalize by the half-window length so it's "rate change per day"
+  const halfDays = mid || 1;
+  const subAccel = (secondSubRate - firstSubRate) / halfDays;
+  const hourAccel = (secondHourRate - firstHourRate) / halfDays;
+
+  return { subAccel, hourAccel };
+}
+
 // ─── Conservative Projection (All-Time Linear Regression) ───────────────
 
 function conservativeProjection(daily: DailyMetrics[]): Projection {
@@ -116,14 +179,12 @@ function conservativeProjection(daily: DailyMetrics[]): Projection {
   const currentSubs = cumSubs[cumSubs.length - 1] || 0;
   const currentHours = cumHours[cumHours.length - 1] || 0;
 
-  // Fit lines to cumulative data
   const subPoints = cumSubs.map((y, x) => ({ x, y }));
   const hourPoints = cumHours.map((y, x) => ({ x, y }));
 
   const subLine = linearRegression(subPoints);
   const hourLine = linearRegression(hourPoints);
 
-  // Project subscriber crossing
   const subsAlready = currentSubs >= SUBSCRIBER_GOAL;
   let subDate: Date | null = null;
   let subDaysRemaining: number | null = null;
@@ -135,7 +196,6 @@ function conservativeProjection(daily: DailyMetrics[]): Projection {
     }
   }
 
-  // Project watch hours crossing
   const hoursAlready = currentHours >= WATCH_HOURS_GOAL;
   let hourDate: Date | null = null;
   let hourDaysRemaining: number | null = null;
@@ -147,10 +207,9 @@ function conservativeProjection(daily: DailyMetrics[]): Projection {
     }
   }
 
-  // Monetization date is the later of the two
   let monetizationDate: Date | null = null;
   if (subsAlready && hoursAlready) {
-    monetizationDate = new Date(); // already eligible
+    monetizationDate = new Date();
   } else if (subDate && hourDate) {
     monetizationDate = subDate > hourDate ? subDate : hourDate;
   } else {
@@ -163,12 +222,14 @@ function conservativeProjection(daily: DailyMetrics[]): Projection {
     subscriberProjection: {
       estimatedDate: subDate,
       dailyRate: subLine.slope,
+      acceleration: 0,
       daysRemaining: subDaysRemaining,
       alreadyAchieved: subsAlready,
     },
     watchTimeProjection: {
       estimatedDate: hourDate,
       dailyRate: hourLine.slope,
+      acceleration: 0,
       daysRemaining: hourDaysRemaining,
       alreadyAchieved: hoursAlready,
     },
@@ -176,7 +237,7 @@ function conservativeProjection(daily: DailyMetrics[]): Projection {
   };
 }
 
-// ─── Current Trend (Weighted Last 30-90 Days) ───────────────────────────
+// ─── Current Trend (Last 90 Days with Acceleration) ──────────────────────
 
 function currentTrendProjection(daily: DailyMetrics[]): Projection {
   const windowSize = Math.min(90, daily.length);
@@ -187,8 +248,8 @@ function currentTrendProjection(daily: DailyMetrics[]): Projection {
   const currentSubs = cumSubs[cumSubs.length - 1] || 0;
   const currentHours = cumHours[cumHours.length - 1] || 0;
 
-  // Exponentially weighted daily rates
-  const alpha = 2 / (windowSize + 1); // EMA smoothing factor
+  // EMA for current daily rate
+  const alpha = 2 / (windowSize + 1);
   let subRate = 0;
   let hourRate = 0;
 
@@ -196,25 +257,34 @@ function currentTrendProjection(daily: DailyMetrics[]): Projection {
     const d = recentDays[i];
     const dailySubs = (d.subscribersGained || 0) - Math.abs(d.subscribersLost || 0);
     const dailyHours = d.watchTimeHours || 0;
-
     subRate = alpha * dailySubs + (1 - alpha) * subRate;
     hourRate = alpha * dailyHours + (1 - alpha) * hourRate;
   }
 
+  // Compute acceleration from first half vs second half
+  const { subAccel, hourAccel } = computeAcceleration(recentDays);
+
+  // Project with curved math
   const subsAlready = currentSubs >= SUBSCRIBER_GOAL;
+  const subsNeeded = SUBSCRIBER_GOAL - currentSubs;
   let subDate: Date | null = null;
   let subDaysRemaining: number | null = null;
   if (!subsAlready && subRate > 0) {
-    subDaysRemaining = Math.ceil((SUBSCRIBER_GOAL - currentSubs) / subRate);
-    subDate = addDays(lastDate, subDaysRemaining);
+    subDaysRemaining = daysToReachTarget(subRate, subAccel, subsNeeded);
+    if (subDaysRemaining !== null) {
+      subDate = addDays(lastDate, subDaysRemaining);
+    }
   }
 
   const hoursAlready = currentHours >= WATCH_HOURS_GOAL;
+  const hoursNeeded = WATCH_HOURS_GOAL - currentHours;
   let hourDate: Date | null = null;
   let hourDaysRemaining: number | null = null;
   if (!hoursAlready && hourRate > 0) {
-    hourDaysRemaining = Math.ceil((WATCH_HOURS_GOAL - currentHours) / hourRate);
-    hourDate = addDays(lastDate, hourDaysRemaining);
+    hourDaysRemaining = daysToReachTarget(hourRate, hourAccel, hoursNeeded);
+    if (hourDaysRemaining !== null) {
+      hourDate = addDays(lastDate, hourDaysRemaining);
+    }
   }
 
   let monetizationDate: Date | null = null;
@@ -232,12 +302,14 @@ function currentTrendProjection(daily: DailyMetrics[]): Projection {
     subscriberProjection: {
       estimatedDate: subDate,
       dailyRate: subRate,
+      acceleration: subAccel,
       daysRemaining: subDaysRemaining,
       alreadyAchieved: subsAlready,
     },
     watchTimeProjection: {
       estimatedDate: hourDate,
       dailyRate: hourRate,
+      acceleration: hourAccel,
       daysRemaining: hourDaysRemaining,
       alreadyAchieved: hoursAlready,
     },
@@ -254,7 +326,6 @@ function optimisticProjection(daily: DailyMetrics[]): Projection {
   const currentSubs = cumSubs[cumSubs.length - 1] || 0;
   const currentHours = cumHours[cumHours.length - 1] || 0;
 
-  // Find best 30-day window for each metric
   const windowSize = Math.min(30, Math.floor(daily.length / 2));
   let bestSubRate = 0;
   let bestHourRate = 0;
@@ -303,12 +374,14 @@ function optimisticProjection(daily: DailyMetrics[]): Projection {
     subscriberProjection: {
       estimatedDate: subDate,
       dailyRate: bestSubRate,
+      acceleration: 0,
       daysRemaining: subDaysRemaining,
       alreadyAchieved: subsAlready,
     },
     watchTimeProjection: {
       estimatedDate: hourDate,
       dailyRate: bestHourRate,
+      acceleration: 0,
       daysRemaining: hourDaysRemaining,
       alreadyAchieved: hoursAlready,
     },
@@ -337,7 +410,7 @@ export function generateProjectionPoints(
     watchTimeHours: cumHours[i],
   }));
 
-  // Future projection points (every 7 days to keep chart smooth but not bloated)
+  // Future projection points
   const futurePoints: ProjectionPoint[] = [];
   const conservative = projections.find(p => p.model === 'conservative');
   const current = projections.find(p => p.model === 'current');
@@ -348,14 +421,10 @@ export function generateProjectionPoints(
 
     const point: ProjectionPoint = { date };
 
+    // Conservative & Optimistic: still linear (no acceleration data)
     if (conservative) {
       point.conservative_subs = lastSubs + conservative.subscriberProjection.dailyRate * day;
       point.conservative_hours = lastHours + conservative.watchTimeProjection.dailyRate * day;
-    }
-
-    if (current) {
-      point.current_subs = lastSubs + current.subscriberProjection.dailyRate * day;
-      point.current_hours = lastHours + current.watchTimeProjection.dailyRate * day;
     }
 
     if (optimistic) {
@@ -363,6 +432,21 @@ export function generateProjectionPoints(
       point.optimistic_hours = lastHours + optimistic.watchTimeProjection.dailyRate * day;
     }
 
+    // Current pace: curved projection using acceleration
+    if (current) {
+      point.current_subs = lastSubs + curvedCumulative(
+        current.subscriberProjection.dailyRate,
+        current.subscriberProjection.acceleration,
+        day
+      );
+      point.current_hours = lastHours + curvedCumulative(
+        current.watchTimeProjection.dailyRate,
+        current.watchTimeProjection.acceleration,
+        day
+      );
+    }
+
+    // What-If: still linear (user-controlled scenario)
     if (whatIfRates) {
       point.whatif_subs = lastSubs + whatIfRates.dailyNewSubs * day;
       point.whatif_hours = lastHours + whatIfRates.dailyWatchHours * day;

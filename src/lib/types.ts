@@ -59,21 +59,19 @@ export type CSVFileType = 'subscribers' | 'watchtime' | 'views' | 'unknown';
 
 export type ProjectionModel = 'conservative' | 'current' | 'optimistic';
 
+export type MetricProjection = {
+  estimatedDate: Date | null;
+  dailyRate: number;
+  acceleration: number; // daily rate change (positive = accelerating)
+  daysRemaining: number | null;
+  alreadyAchieved: boolean;
+};
+
 export type Projection = {
   model: ProjectionModel;
   label: string;
-  subscriberProjection: {
-    estimatedDate: Date | null;
-    dailyRate: number;
-    daysRemaining: number | null;
-    alreadyAchieved: boolean;
-  };
-  watchTimeProjection: {
-    estimatedDate: Date | null;
-    dailyRate: number;
-    daysRemaining: number | null;
-    alreadyAchieved: boolean;
-  };
+  subscriberProjection: MetricProjection;
+  watchTimeProjection: MetricProjection;
   monetizationDate: Date | null; // later of the two dates
 };
 

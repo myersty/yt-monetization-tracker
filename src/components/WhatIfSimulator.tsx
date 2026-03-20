@@ -52,14 +52,15 @@ export default function WhatIfSimulator({
     // Convert days between posts to videos per week
     const videosPerWeek = 7 / daysBetweenPosts;
 
-    // Use real retention rate from YouTube Analytics
-    const avgWatchMinutesPerView = avgVideoMinutes * retentionRate;
-    const weeklyWatchHours = (videosPerWeek * avgViewsPerVideo * avgWatchMinutesPerView) / 60;
-    const dailyWatchHours = weeklyWatchHours / 7;
+    // Calibrate from actual observed rates so default slider positions match current pace.
+    // This prevents the jarring date jump when the user first touches a slider.
+    const actualViewsPerDay = actualViews / actualCadence;
+    const subsPerView = actualViewsPerDay > 0 ? currentSubsPerDay / actualViewsPerDay : 0.03;
+    const hoursPerView = actualViewsPerDay > 0 ? currentHoursPerDay / actualViewsPerDay : (actualDuration * retentionRate / 60);
 
-    // Subscriber conversion: ~2-5% of viewers subscribe (for small channels)
-    const weeklyNewSubs = videosPerWeek * avgViewsPerVideo * 0.03;
-    const dailyNewSubs = weeklyNewSubs / 7;
+    const dailyViews = videosPerWeek * avgViewsPerVideo / 7;
+    const dailyWatchHours = dailyViews * hoursPerView;
+    const dailyNewSubs = dailyViews * subsPerView;
 
     const subsNeeded = Math.max(0, 1000 - currentSubscribers);
     const hoursNeeded = Math.max(0, 4000 - totalWatchHours);
@@ -83,10 +84,8 @@ export default function WhatIfSimulator({
       dailyNewSubs,
       daysToMonetization,
       estimatedDate,
-      weeklyWatchHours,
-      weeklyNewSubs,
     };
-  }, [daysBetweenPosts, avgVideoMinutes, avgViewsPerVideo, retentionRate, currentSubscribers, totalWatchHours]);
+  }, [daysBetweenPosts, avgVideoMinutes, avgViewsPerVideo, currentSubsPerDay, currentHoursPerDay, actualViews, actualCadence, actualDuration, retentionRate, currentSubscribers, totalWatchHours]);
 
   // Report rates to parent for timeline integration
   useEffect(() => {

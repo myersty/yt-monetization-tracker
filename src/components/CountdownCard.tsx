@@ -50,7 +50,7 @@ export default function CountdownCard({ projections, currentSubscribers = 0, tot
   const hoursNeeded = Math.max(4000 - totalWatchHours, 0);
 
   // When What-If sliders are adjusted, compute from those rates
-  // Otherwise compute from last 90 days pace
+  // Otherwise use the acceleration-aware curved projection from the current model
   let weeksToTarget: number | null = null;
   let estimatedDate: Date | null = null;
   const isWhatIf = !!whatIfRates;
@@ -69,18 +69,15 @@ export default function CountdownCard({ projections, currentSubscribers = 0, tot
       estimatedDate = new Date(Date.now() + daysToTarget * 24 * 60 * 60 * 1000);
     }
   } else {
-    // Default: use last 90 days pace
-    const last90 = daily.slice(-90);
-    const numWeeks = Math.max(last90.length / 7, 1);
-    const avgSubsPerWeek = last90.reduce((s, d) => s + ((d.subscribersGained || 0) - Math.abs(d.subscribersLost || 0)), 0) / numWeeks;
-    const avgHoursPerWeek = last90.reduce((s, d) => s + (d.watchTimeHours || 0), 0) / numWeeks;
-    const weeksForSubs = avgSubsPerWeek > 0 ? Math.ceil(subsNeeded / avgSubsPerWeek) : null;
-    const weeksForHours = avgHoursPerWeek > 0 ? Math.ceil(hoursNeeded / avgHoursPerWeek) : null;
-    weeksToTarget = weeksForSubs !== null && weeksForHours !== null
-      ? Math.max(weeksForSubs, weeksForHours)
-      : weeksForSubs ?? weeksForHours;
-    // Use projections model date for default view
+    // Use acceleration-aware curved projection date
     estimatedDate = current?.monetizationDate ?? null;
+    // Derive weeks from the longer of the two metric timelines
+    const subDays = current?.subscriberProjection.daysRemaining;
+    const hourDays = current?.watchTimeProjection.daysRemaining;
+    const longerDays = subDays != null && hourDays != null
+      ? Math.max(subDays, hourDays)
+      : subDays ?? hourDays;
+    weeksToTarget = longerDays != null ? Math.ceil(longerDays / 7) : null;
   }
 
   return (
