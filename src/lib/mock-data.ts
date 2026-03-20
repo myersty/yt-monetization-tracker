@@ -132,5 +132,12 @@ export function generateMockData(): ParsedData {
     avgViewsPerVideo: 3785,
     averageViewPercentage: 13.7,
     avgWatchHoursPerVideo: 29.4,
+    topVideos: [
+      { title: 'I Automated My Entire Dev Setup (Here\'s How)', views: 12400, watchHours: 186, publishedDaysAgo: 92 },
+      { title: 'Stop Using Create React App in 2026', views: 8700, watchHours: 131, publishedDaysAgo: 65 },
+      { title: 'The VS Code Extension That Changed Everything', views: 6200, watchHours: 93, publishedDaysAgo: 38 },
+      { title: 'Why I Switched from TypeScript to Go', views: 5100, watchHours: 77, publishedDaysAgo: 120 },
+      { title: 'Building a SaaS in 48 Hours — Full Breakdown', views: 4800, watchHours: 72, publishedDaysAgo: 145 },
+    ],
   };
 }

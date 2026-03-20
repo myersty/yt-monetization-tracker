@@ -44,6 +44,15 @@ export type ParsedData = {
   averageViewPercentage?: number;
   /** Computed retention-based watch hours per video */
   avgWatchHoursPerVideo?: number;
+  /** Top-performing videos by views (last 180 days) */
+  topVideos?: TopVideo[];
+};
+
+export type TopVideo = {
+  title: string;
+  views: number;
+  watchHours: number;
+  publishedDaysAgo: number;
 };
 
 export type CSVFileType = 'subscribers' | 'watchtime' | 'views' | 'unknown';

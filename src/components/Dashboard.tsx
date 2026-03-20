@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { ParsedData } from '@/lib/types';
-import { calculateProjections, generateProjectionPoints, detectOutliers } from '@/lib/projections';
+import { calculateProjections, generateProjectionPoints } from '@/lib/projections';
 import { useScrollReveal } from '@/lib/useScrollReveal';
 import ProgressRings from './ProgressRings';
 import TimelineChart from './TimelineChart';
@@ -12,6 +12,7 @@ import MilestoneMarkers from './MilestoneMarkers';
 import WhatIfSimulator from './WhatIfSimulator';
 import ContentMetrics from './ContentMetrics';
 import RecommendationsCard from './RecommendationsCard';
+import TopPerformingContent from './TopPerformingContent';
 
 type DashboardProps = {
   data: ParsedData;
@@ -26,7 +27,6 @@ export type WhatIfRates = {
 
 export default function Dashboard({ data, onReset, isOAuthDashboard = false }: DashboardProps) {
   const projections = useMemo(() => calculateProjections(data.daily), [data.daily]);
-  const outliers = useMemo(() => detectOutliers(data.daily), [data.daily]);
   const currentProjection = projections.find(p => p.model === 'current');
   const currentSubsPerDay = currentProjection?.subscriberProjection.dailyRate || 0;
   const currentHoursPerDay = currentProjection?.watchTimeProjection.dailyRate || 0;
@@ -49,9 +49,6 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
   const hasSubData = data.daily.some(d => d.subscribersGained !== undefined || d.subscribers !== undefined);
   const hasWatchData = data.daily.some(d => d.watchTimeHours !== undefined);
   const hasViewData = data.daily.some(d => d.views !== undefined);
-
-  // Shorts breakdown
-  const shortsBreakdown = data.shortsBreakdown;
 
   return (
     <div className="min-h-screen bg-[var(--gray-50)] relative">
@@ -128,6 +125,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
             projections={projections}
             currentSubscribers={data.totals.currentSubscribers}
             totalWatchHours={data.totals.totalWatchTimeHours}
+            daily={data.daily}
           />
           <VelocityCard
             daily={data.daily}
@@ -142,14 +140,25 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
         {/* Section divider */}
         <div className="section-divider mb-16" />
 
-        {/* Content Metrics + Path to Monetization */}
-        <div className="mb-16 v2-reveal">
+        {/* Content Performance + What-If Simulator */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-16 v2-reveal">
           <ContentMetrics
             daily={data.daily}
             currentSubscribers={data.totals.currentSubscribers}
             totalWatchTimeHours={data.totals.totalWatchTimeHours}
             videosLast90Days={data.videosLast90Days}
             postingCadenceDays={data.postingCadenceDays}
+          />
+          <WhatIfSimulator
+            currentSubscribers={data.totals.currentSubscribers}
+            totalWatchHours={data.totals.totalWatchTimeHours}
+            currentSubsPerDay={currentSubsPerDay}
+            currentHoursPerDay={currentHoursPerDay}
+            postingCadenceDays={data.postingCadenceDays}
+            avgVideoDurationMinutes={data.avgVideoDurationMinutes}
+            avgViewsPerVideo={data.avgViewsPerVideo}
+            averageViewPercentage={data.averageViewPercentage}
+            onRatesChange={setWhatIfRates}
           />
         </div>
 
@@ -171,80 +180,28 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
           </div>
         )}
 
-        {/* Milestones + What-If */}
+        {/* Milestones + Top Performing Content */}
         <div className="v2-reveal mb-4">
-          <span className="section-badge mb-4 inline-block">Milestones &amp; Simulation</span>
+          <span className="section-badge mb-4 inline-block">Milestones &amp; Content</span>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-16 v2-reveal">
           <MilestoneMarkers
             currentSubscribers={data.totals.currentSubscribers}
             totalWatchHours={data.totals.totalWatchTimeHours}
           />
-          <WhatIfSimulator
-            currentSubscribers={data.totals.currentSubscribers}
-            totalWatchHours={data.totals.totalWatchTimeHours}
-            currentSubsPerDay={currentSubsPerDay}
-            currentHoursPerDay={currentHoursPerDay}
-            postingCadenceDays={data.postingCadenceDays}
-            avgVideoDurationMinutes={data.avgVideoDurationMinutes}
-            avgViewsPerVideo={data.avgViewsPerVideo}
-            averageViewPercentage={data.averageViewPercentage}
-            onRatesChange={setWhatIfRates}
-          />
-        </div>
-
-        {/* Outlier Alerts */}
-        {outliers.length > 0 && (
-          <div className="card p-6 mb-16 v2-reveal">
-            <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-3">
-              Viral Spike Detection
-            </p>
-            <p className="text-sm text-[var(--gray-600)] mb-4">
-              These days had unusually high activity (&gt;3 standard deviations). Projections account for these as outliers.
-            </p>
-            <div className="space-y-2">
-              {outliers.slice(0, 5).map((o, i) => (
-                <div key={i} className="flex items-center gap-3 text-sm">
-                  <span className="w-2 h-2 rounded-full bg-[var(--gold)]" />
-                  <span className="text-[var(--gray-700)]">
-                    {new Date(o.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </span>
-                  <span className="text-[var(--gray-500)]">
-                    {o.metric === 'subscribers' ? 'Subscribers' : 'Watch Hours'}: {Math.round(o.value).toLocaleString()}
-                  </span>
-                  <span className="text-[10px] text-[var(--gold)] font-semibold">
-                    {o.zScore.toFixed(1)}x normal
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Channel Overview */}
-        <div className="v2-reveal mb-4">
-          <span className="section-badge mb-4 inline-block">Channel Overview</span>
-        </div>
-        <div className="card p-6 mb-16 v2-reveal">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <StatBlock label="Tracking Period" value={`${data.daily.length} days`} />
-            <StatBlock label="Total Views" value={data.totals.totalViews.toLocaleString()} />
-            <StatBlock label="Subscribers" value={data.totals.currentSubscribers.toLocaleString()} />
-            <StatBlock
-              label={shortsBreakdown ? 'Watch Hours (Long-Form)' : 'Watch Hours'}
-              value={Math.round(data.totals.totalWatchTimeHours).toLocaleString()}
-            />
-          </div>
-          {shortsBreakdown && (
-            <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <StatBlock label="Shorts Watch Hours" value={Math.round(shortsBreakdown.shortsWatchTimeHours).toLocaleString()} />
-              <StatBlock label="Total Watch Hours (All)" value={Math.round(shortsBreakdown.totalWatchTimeHours).toLocaleString()} />
+          {data.topVideos && data.topVideos.length > 0 ? (
+            <TopPerformingContent videos={data.topVideos} />
+          ) : (
+            <div className="card p-6 flex items-center justify-center">
+              <p className="text-sm text-[var(--gray-500)]">
+                Top-performing content data available with YouTube API connection.
+              </p>
             </div>
           )}
         </div>
 
         {/* Personalized Recommendations */}
-        <div className="v2-reveal">
+        <div className="mb-16 v2-reveal">
           <RecommendationsCard
             avgVideoDurationMinutes={data.avgVideoDurationMinutes}
             avgViewsPerVideo={data.avgViewsPerVideo}
@@ -267,8 +224,8 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
               <p className="font-semibold text-[var(--gray-700)] mb-1">Watch Hours</p>
               <p>
                 Only <strong>long-form video</strong> watch hours count toward the 4,000-hour YouTube Partner Program requirement.
-                {shortsBreakdown && shortsBreakdown.shortsWatchTimeHours > 0 && (
-                  <> We detected <strong>{Math.round(shortsBreakdown.shortsWatchTimeHours).toLocaleString()} hours</strong> from Shorts, which have been excluded from your total.</>
+                {data.shortsBreakdown && data.shortsBreakdown.shortsWatchTimeHours > 0 && (
+                  <> We detected <strong>{Math.round(data.shortsBreakdown.shortsWatchTimeHours).toLocaleString()} hours</strong> from Shorts, which have been excluded from your total.</>
                 )}
                 {' '}YouTube evaluates watch hours on a <strong>rolling 365-day window</strong> &mdash; hours earned more than a year ago no longer count.
               </p>
@@ -328,11 +285,3 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
   );
 }
 
-function StatBlock({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--gray-600)] mb-1">{label}</p>
-      <p className="font-[family-name:var(--font-display)] font-bold text-xl">{value}</p>
-    </div>
-  );
-}

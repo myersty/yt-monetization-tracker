@@ -1,12 +1,12 @@
 'use client';
 
-import { Projection } from '@/lib/types';
-import { useCountUp } from '@/lib/useCountUp';
+import { Projection, DailyMetrics } from '@/lib/types';
 
 type CountdownCardProps = {
   projections: Projection[];
   currentSubscribers?: number;
   totalWatchHours?: number;
+  daily?: DailyMetrics[];
 };
 
 function formatDate(date: Date | null): string {
@@ -18,12 +18,6 @@ function formatDate(date: Date | null): string {
   });
 }
 
-function daysFromNow(date: Date | null): number | null {
-  if (!date) return null;
-  const now = new Date();
-  return Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-}
-
 function getStageEmoji(progressPercent: number): { emoji: string; size: string } {
   if (progressPercent >= 100) return { emoji: '🎉', size: 'text-5xl' };
   if (progressPercent >= 75) return { emoji: '💪', size: 'text-2xl' };
@@ -33,23 +27,10 @@ function getStageEmoji(progressPercent: number): { emoji: string; size: string }
   return { emoji: '🌱', size: 'text-2xl' };
 }
 
-function getMotivationalMessage(progressPercent: number, daysRemaining: number | null): string {
-  if (progressPercent >= 100) return '';
-  if (progressPercent >= 75) return 'You\'re in the home stretch. Keep pushing!';
-  if (progressPercent >= 50) return 'Halfway there! Consistency is everything now.';
-  if (daysRemaining !== null && daysRemaining < 180) return 'You\'re making real progress. Stay consistent and you\'ll get there.';
-  if (progressPercent >= 25) return 'Great momentum building. Focus on content that drives watch time.';
-  if (progressPercent >= 10) return 'You\'re off to a solid start. Post consistently and engage your audience.';
-  return 'Every creator starts here. Focus on finding your niche and posting regularly.';
-}
-
-export default function CountdownCard({ projections, currentSubscribers = 0, totalWatchHours = 0 }: CountdownCardProps) {
+export default function CountdownCard({ projections, currentSubscribers = 0, totalWatchHours = 0, daily = [] }: CountdownCardProps) {
   const current = projections.find(p => p.model === 'current');
-  const conservative = projections.find(p => p.model === 'conservative');
-  const optimistic = projections.find(p => p.model === 'optimistic');
 
   const primaryDate = current?.monetizationDate ?? null;
-  const primaryDays = daysFromNow(primaryDate);
 
   const alreadyMonetizable =
     current?.subscriberProjection.alreadyAchieved &&
@@ -60,6 +41,19 @@ export default function CountdownCard({ projections, currentSubscribers = 0, tot
   const hoursProgress = Math.min(100, (totalWatchHours / 4000) * 100);
   const overallProgress = (subProgress + hoursProgress) / 2;
   const stage = getStageEmoji(alreadyMonetizable ? 100 : overallProgress);
+
+  // Compute weeks to monetization from last 90 days pace
+  const last90 = daily.slice(-90);
+  const numWeeks = Math.max(last90.length / 7, 1);
+  const avgSubsPerWeek = last90.reduce((s, d) => s + ((d.subscribersGained || 0) - Math.abs(d.subscribersLost || 0)), 0) / numWeeks;
+  const avgHoursPerWeek = last90.reduce((s, d) => s + (d.watchTimeHours || 0), 0) / numWeeks;
+  const subsNeeded = Math.max(1000 - currentSubscribers, 0);
+  const hoursNeeded = Math.max(4000 - totalWatchHours, 0);
+  const weeksForSubs = avgSubsPerWeek > 0 ? Math.ceil(subsNeeded / avgSubsPerWeek) : null;
+  const weeksForHours = avgHoursPerWeek > 0 ? Math.ceil(hoursNeeded / avgHoursPerWeek) : null;
+  const weeksToTarget = weeksForSubs !== null && weeksForHours !== null
+    ? Math.max(weeksForSubs, weeksForHours)
+    : weeksForSubs ?? weeksForHours;
 
   return (
     <div className="card ring-base ring-br p-6 min-h-[320px] flex flex-col">
@@ -88,14 +82,11 @@ export default function CountdownCard({ projections, currentSubscribers = 0, tot
             <p className="text-heading-gradient text-3xl sm:text-4xl font-bold font-[family-name:var(--font-display)] mt-2">
               {formatDate(primaryDate || null)}
             </p>
-            {primaryDays !== null && primaryDays > 0 && (
+            {weeksToTarget !== null && weeksToTarget > 0 && (
               <p className="text-accent-gradient font-semibold text-xl mt-2">
-                <CountUpDays target={primaryDays} /> days away
+                ~{weeksToTarget} weeks at your current pace
               </p>
             )}
-            <p className="text-[var(--gray-500)] text-xs mt-1">
-              At your current pace
-            </p>
           </div>
           <div className="mt-auto pt-4 border-t border-white/6">
             <p className="text-[var(--gray-500)] text-[11px] leading-relaxed">
@@ -112,35 +103,4 @@ export default function CountdownCard({ projections, currentSubscribers = 0, tot
   );
 }
 
-function CountUpDays({ target }: { target: number }) {
-  const value = useCountUp(target, 800, 300);
-  return <>{value}</>;
-}
 
-function ProjectionEstimate({
-  label,
-  date,
-  color,
-  active = false,
-}: {
-  label: string;
-  date: Date | null;
-  color: string;
-  active?: boolean;
-}) {
-  const days = daysFromNow(date);
-
-  return (
-    <div className={`text-center ${active ? 'opacity-100' : 'opacity-70'}`}>
-      <p className={`text-[10px] font-semibold uppercase tracking-wider mb-1 ${active ? 'text-accent-gradient' : ''}`} style={active ? undefined : { color }}>
-        {label}
-      </p>
-      <p className={`text-sm font-bold font-[family-name:var(--font-display)] ${active ? 'text-[var(--foreground)]' : 'text-[var(--gray-700)]'}`}>
-        {date ? date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A'}
-      </p>
-      {days !== null && days > 0 && (
-        <p className="text-xs text-[var(--gray-500)]">{days}d</p>
-      )}
-    </div>
-  );
-}

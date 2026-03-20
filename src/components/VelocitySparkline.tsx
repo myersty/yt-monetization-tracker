@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { DailyMetrics } from '@/lib/types';
 import { useCountUp } from '@/lib/useCountUp';
@@ -101,6 +101,8 @@ function CustomTooltip({ active, payload, label, metric }: any) {
 
 export default function VelocityCard({ daily, availableMetrics }: VelocityCardProps) {
   const [activeTab, setActiveTab] = useState<MetricTab>(availableMetrics[0]);
+  const [showTrendTip, setShowTrendTip] = useState(false);
+  const tipTimeout = useRef<ReturnType<typeof setTimeout>>(null);
 
   const metricData = useMemo(() => getMetricData(daily, activeTab), [daily, activeTab]);
   const animatedTotal = useCountUp(Math.round(metricData.totalGained), 800, 200);
@@ -126,19 +128,33 @@ export default function VelocityCard({ daily, availableMetrics }: VelocityCardPr
             </button>
           ))}
         </div>
-        <span
-          className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
-          style={{
-            color: metricData.trendColor,
-            backgroundColor: metricData.isAccelerating
-              ? 'rgba(46, 125, 50, 0.1)'
-              : metricData.isDecelerating
-                ? 'rgba(192, 57, 43, 0.1)'
-                : 'rgba(136, 136, 136, 0.1)',
-          }}
-        >
-          {metricData.trendLabel}
-        </span>
+        <div className="relative">
+          <span
+            className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full cursor-help"
+            style={{
+              color: metricData.trendColor,
+              backgroundColor: metricData.isAccelerating
+                ? 'rgba(46, 125, 50, 0.1)'
+                : metricData.isDecelerating
+                  ? 'rgba(192, 57, 43, 0.1)'
+                  : 'rgba(136, 136, 136, 0.1)',
+            }}
+            onMouseEnter={() => {
+              if (tipTimeout.current) clearTimeout(tipTimeout.current);
+              setShowTrendTip(true);
+            }}
+            onMouseLeave={() => {
+              tipTimeout.current = setTimeout(() => setShowTrendTip(false), 150);
+            }}
+          >
+            {metricData.trendLabel}
+          </span>
+          {showTrendTip && (
+            <div className="absolute right-0 top-full mt-2 w-56 p-3 rounded-xl bg-[var(--background)] border border-[var(--gray-200)] shadow-lg z-50 text-xs text-[var(--gray-600)] leading-relaxed">
+              Compares your daily average in the first vs. second half of the last 90 days. {metricData.isAccelerating ? 'Your recent pace is >5% faster than the first half.' : metricData.isDecelerating ? 'Your recent pace is >5% slower than the first half.' : 'Your pace is roughly the same across both halves.'}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Big number — total gained over 90 days */}
