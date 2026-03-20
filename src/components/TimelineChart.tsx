@@ -330,16 +330,16 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
 
   const tickGap = timeRange === '1M' ? 40 : timeRange === '3M' ? 50 : 70;
 
-  // --- GRID DENSITY PER RANGE ---
-  const gridConfig = useMemo(() => {
-    switch (timeRange) {
-      case '1M':  return { vertical: true, horizontal: true, dash: '3 3' };
-      case '3M':  return { vertical: true, horizontal: true, dash: '4 4' };
-      case '6M':  return { vertical: false, horizontal: true, dash: '6 4' };
-      case '1Y':  return { vertical: false, horizontal: true, dash: '6 4' };
-      case 'All': return { vertical: false, horizontal: true, dash: '8 6' };
-    }
-  }, [timeRange]);
+  // --- GRID: horizontal only, minimal ---
+  const gridDash = '6 6';
+
+  // --- Goal threshold position for gradient color transition ---
+  // Computes where the goal line sits as a fraction from top of chart (0=top, 1=bottom)
+  const goalFraction = useMemo(() => {
+    if (view === 'weekstogoal') return 0.5;
+    const [, yMax] = yDomain;
+    return yMax > 0 ? 1 - (goal / yMax) : 0.5;
+  }, [yDomain, goal, view]);
 
   const formatValue = (val: number) => {
     if (val >= 1000) return `${(val / 1000).toFixed(1)}k`;
@@ -416,6 +416,29 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
       </div>
 
       <div className={animating ? 'chart-zoom-transition' : 'chart-zoom-idle'} style={{ willChange: 'transform' }}>
+      {/* Summary stats (Wealthfront-style) */}
+      {view !== 'weekstogoal' && (
+        <div className="flex items-center gap-8 mb-6 pl-1">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: view === 'subscribers' ? 'var(--gold)' : '#1565C0' }} />
+            <span className="text-sm text-[var(--gray-600)]">You have</span>
+            <span className="text-sm font-bold text-[var(--foreground)]">
+              {view === 'subscribers'
+                ? currentSubscribers.toLocaleString()
+                : Math.round(totalWatchTimeHours ?? 0).toLocaleString()
+              }
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#2E7D32]" />
+            <span className="text-sm text-[var(--gray-600)]">You need</span>
+            <span className="text-sm font-bold text-[var(--foreground)]">
+              {goal.toLocaleString()}
+            </span>
+          </div>
+        </div>
+      )}
+
       {view === 'weekstogoal' ? (
         alreadyEligible ? (
           <div className="flex items-center justify-center h-[350px]">
@@ -437,7 +460,7 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
           <>
             <ResponsiveContainer width="100%" height={350}>
               <LineChart data={filteredWeeksData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray={gridConfig.dash} stroke="var(--gray-200)" vertical={gridConfig.vertical} horizontal={gridConfig.horizontal} />
+                <CartesianGrid strokeDasharray={gridDash} stroke="rgba(255,255,255,0.04)" vertical={false} horizontal={true} />
                 <XAxis
                   dataKey="date"
                   tickFormatter={formatDateByRange}
@@ -507,19 +530,30 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
         )
       ) : (
         <>
-          <ResponsiveContainer width="100%" height={350}>
+          <ResponsiveContainer width="100%" height={380}>
             <AreaChart data={filteredData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="gradientGold" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--gold)" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="var(--gold)" stopOpacity={0} />
+                {/* Historical fill — gold/blue gradient with color shift at goal threshold */}
+                <linearGradient id="gradientHistorical" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#2E7D32" stopOpacity={0.25} />
+                  <stop offset={`${Math.max(0, goalFraction - 0.02) * 100}%`} stopColor="#2E7D32" stopOpacity={0.15} />
+                  <stop offset={`${goalFraction * 100}%`} stopColor={view === 'subscribers' ? 'var(--gold)' : '#1565C0'} stopOpacity={0.15} />
+                  <stop offset="100%" stopColor={view === 'subscribers' ? 'var(--gold)' : '#1565C0'} stopOpacity={0.02} />
                 </linearGradient>
-                <linearGradient id="gradientBlue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#1565C0" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#1565C0" stopOpacity={0} />
+                {/* Projection fill — softer version of same gradient */}
+                <linearGradient id="gradientProjection" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#2E7D32" stopOpacity={0.18} />
+                  <stop offset={`${Math.max(0, goalFraction - 0.02) * 100}%`} stopColor="#2E7D32" stopOpacity={0.1} />
+                  <stop offset={`${goalFraction * 100}%`} stopColor={view === 'subscribers' ? 'var(--gold)' : '#1565C0'} stopOpacity={0.1} />
+                  <stop offset="100%" stopColor={view === 'subscribers' ? 'var(--gold)' : '#1565C0'} stopOpacity={0.01} />
+                </linearGradient>
+                {/* What-If fill */}
+                <linearGradient id="gradientWhatIf" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#E040FB" stopOpacity={0.12} />
+                  <stop offset="100%" stopColor="#E040FB" stopOpacity={0.01} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray={gridConfig.dash} stroke="var(--gray-200)" vertical={gridConfig.vertical} horizontal={gridConfig.horizontal} />
+              <CartesianGrid strokeDasharray={gridDash} stroke="rgba(255,255,255,0.04)" vertical={false} horizontal={true} />
               <XAxis
                 dataKey="timestamp"
                 type="number"
@@ -528,6 +562,8 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                 tickFormatter={formatTickByRange}
                 tick={{ fontSize: 11, fill: 'var(--gray-600)' }}
                 minTickGap={tickGap}
+                axisLine={{ stroke: 'rgba(255,255,255,0.06)' }}
+                tickLine={false}
               />
               <YAxis
                 tickFormatter={formatValue}
@@ -535,6 +571,8 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                 width={50}
                 domain={yDomain}
                 allowDataOverflow={true}
+                axisLine={false}
+                tickLine={false}
                 label={{
                   value: yAxisLabel,
                   angle: -90,
@@ -544,6 +582,15 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                 }}
               />
               <Tooltip
+                contentStyle={{
+                  backgroundColor: 'rgba(20, 20, 20, 0.95)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '10px',
+                  padding: '10px 14px',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                }}
+                labelStyle={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, marginBottom: 4 }}
+                itemStyle={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, padding: '2px 0' }}
                 labelFormatter={(ts) => new Date(ts).toLocaleDateString('en-US', {
                   weekday: 'short',
                   month: 'short',
@@ -556,72 +603,73 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                     watchTimeHours: 'Watch Hours',
                     current_subs: 'Current Pace',
                     current_hours: 'Current Pace',
-                    whatif_subs: 'What-If (adjust below)',
-                    whatif_hours: 'What-If (adjust below)',
+                    whatif_subs: 'What-If',
+                    whatif_hours: 'What-If',
                   };
                   const numVal = typeof value === 'number' ? value : Number(value) || 0;
                   const nameStr = String(name);
                   if (nameStr === 'timestamp') return null;
                   return [Math.round(numVal).toLocaleString(), labels[nameStr] || nameStr];
                 }}
+                cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1 }}
               />
 
-              {/* Goal line — dimmed, label on left near Y-axis */}
+              {/* Goal threshold — subtle dashed reference */}
               <ReferenceLine
                 y={goal}
-                stroke="var(--gold)"
-                strokeDasharray="12 6"
-                strokeWidth={1.5}
-                strokeOpacity={0.35}
+                stroke="#2E7D32"
+                strokeDasharray="8 4"
+                strokeWidth={1}
+                strokeOpacity={0.4}
                 label={{
                   value: goalLabel,
                   position: 'insideTopLeft',
                   fontSize: 10,
-                  fill: 'var(--gold)',
+                  fill: '#2E7D32',
                   fontWeight: 500,
-                  opacity: 0.6,
+                  opacity: 0.5,
                 }}
               />
 
-              {/* Historical data */}
+              {/* Historical data — solid line with filled area */}
               <Area
-                type="monotone"
+                type="natural"
                 dataKey={dataKey}
                 stroke={view === 'subscribers' ? 'var(--gold)' : '#1565C0'}
-                fill={view === 'subscribers' ? 'url(#gradientGold)' : 'url(#gradientBlue)'}
-                strokeWidth={2}
+                fill="url(#gradientHistorical)"
+                strokeWidth={2.5}
                 dot={false}
-                animationDuration={700}
+                animationDuration={800}
                 animationEasing="ease-in-out"
               />
 
-              {/* Projection lines */}
+              {/* Current Pace projection — dashed line with soft filled area */}
               {showProjections && (
                 <>
                   <Area
-                    type="monotone"
+                    type="natural"
                     dataKey={view === 'subscribers' ? 'current_subs' : 'current_hours'}
                     stroke={view === 'subscribers' ? 'var(--gold)' : '#1565C0'}
-                    fill="none"
+                    fill="url(#gradientProjection)"
                     strokeWidth={2}
                     strokeDasharray="6 3"
                     dot={false}
                     name={view === 'subscribers' ? 'current_subs' : 'current_hours'}
-                    animationDuration={700}
+                    animationDuration={800}
                     animationEasing="ease-in-out"
                   />
-                  {/* What-If scenario line */}
+                  {/* What-If scenario — distinct color with soft fill */}
                   {filteredData.some(d => d[view === 'subscribers' ? 'whatif_subs' : 'whatif_hours'] !== undefined) && (
                     <Area
-                      type="monotone"
+                      type="natural"
                       dataKey={view === 'subscribers' ? 'whatif_subs' : 'whatif_hours'}
                       stroke="#E040FB"
-                      fill="none"
-                      strokeWidth={2.5}
+                      fill="url(#gradientWhatIf)"
+                      strokeWidth={2}
                       strokeDasharray="4 2"
                       dot={false}
                       name={view === 'subscribers' ? 'whatif_subs' : 'whatif_hours'}
-                      animationDuration={700}
+                      animationDuration={800}
                       animationEasing="ease-in-out"
                     />
                   )}
@@ -630,16 +678,20 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
             </AreaChart>
           </ResponsiveContainer>
 
-          {/* Projection legend */}
+          {/* Legend */}
           {showProjections && (
             <div className="flex justify-center gap-6 mt-4 text-xs text-[var(--gray-600)]">
               <span className="flex items-center gap-1.5">
-                <span className="w-4 h-0 border-t-2 border-dashed" style={{ borderColor: view === 'subscribers' ? 'var(--gold)' : '#1565C0' }} />
+                <span className="w-4 h-0.5 rounded-full" style={{ backgroundColor: view === 'subscribers' ? 'var(--gold)' : '#1565C0' }} />
+                Actual
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-4 h-0 border-t-[1.5px] border-dashed" style={{ borderColor: view === 'subscribers' ? 'var(--gold)' : '#1565C0' }} />
                 Current Pace
               </span>
               {filteredData.some(d => d.whatif_subs !== undefined || d.whatif_hours !== undefined) && (
                 <span className="flex items-center gap-1.5">
-                  <span className="w-4 h-0 border-t-2 border-dashed border-[#E040FB]" />
+                  <span className="w-4 h-0 border-t-[1.5px] border-dashed border-[#E040FB]" />
                   What-If
                 </span>
               )}
