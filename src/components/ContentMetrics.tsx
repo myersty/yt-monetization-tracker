@@ -53,7 +53,7 @@ export default function ContentMetrics({
   const weeksForSubs = avgSubsPerWeek > 0 ? Math.ceil(subsNeeded / avgSubsPerWeek) : null;
 
   return (
-    <div className="card ring-base ring-tr p-6">
+    <div className="card p-6">
       <p className="text-xs font-semibold uppercase tracking-wider text-accent-gradient mb-5">
         Content Performance (Last 90 Days)
       </p>

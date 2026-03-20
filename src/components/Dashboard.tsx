@@ -89,7 +89,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
             )}
             <button
               onClick={onReset}
-              className="text-xs text-[var(--gray-500)] hover:text-[var(--gold)] transition-colors"
+              className="text-xs text-[var(--gray-500)] hover:text-[var(--gold)] transition-all cursor-pointer hover:scale-105 active:scale-95"
             >
               Upload New Data
             </button>
@@ -121,7 +121,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
         </div>
 
         {/* Countdown + Velocity Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-16 v2-reveal">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 v2-reveal">
           <CountdownCard
             projections={projections}
             currentSubscribers={data.totals.currentSubscribers}
@@ -138,9 +138,6 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
             ]}
           />
         </div>
-
-        {/* Section divider */}
-        <div className="section-divider mb-16" />
 
         {/* Content Performance + What-If Simulator */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-16 v2-reveal">

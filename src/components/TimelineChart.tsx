@@ -361,10 +361,10 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
                 key={range.key}
                 onClick={() => setTimeRange(range.key)}
                 className={`
-                  px-3 py-1 text-xs font-medium rounded-full transition-all duration-200
+                  px-3 py-1 text-xs font-medium rounded-full transition-all duration-200 cursor-pointer active:scale-95
                   ${timeRange === range.key
                     ? 'bg-[var(--gold)] text-white'
-                    : 'text-[var(--gray-600)] hover:text-[var(--foreground)]'
+                    : 'text-[var(--gray-600)] hover:text-[var(--foreground)] hover:scale-105'
                   }
                 `}
               >
@@ -378,10 +378,10 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
             <button
               onClick={() => setView('subscribers')}
               className={`
-                px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200
+                px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 cursor-pointer active:scale-95
                 ${view === 'subscribers'
                   ? 'bg-[var(--foreground)] text-[var(--background)]'
-                  : 'text-[var(--gray-600)] hover:text-[var(--foreground)]'
+                  : 'text-[var(--gray-600)] hover:text-[var(--foreground)] hover:scale-105'
                 }
               `}
             >
@@ -390,10 +390,10 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
             <button
               onClick={() => setView('watchtime')}
               className={`
-                px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200
+                px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 cursor-pointer active:scale-95
                 ${view === 'watchtime'
                   ? 'bg-[var(--foreground)] text-[var(--background)]'
-                  : 'text-[var(--gray-600)] hover:text-[var(--foreground)]'
+                  : 'text-[var(--gray-600)] hover:text-[var(--foreground)] hover:scale-105'
                 }
               `}
             >
@@ -402,10 +402,10 @@ export default function TimelineChart({ data, daily, lastHistoricalDate, current
             <button
               onClick={() => setView('weekstogoal')}
               className={`
-                px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200
+                px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 cursor-pointer active:scale-95
                 ${view === 'weekstogoal'
                   ? 'bg-[var(--foreground)] text-[var(--background)]'
-                  : 'text-[var(--gray-600)] hover:text-[var(--foreground)]'
+                  : 'text-[var(--gray-600)] hover:text-[var(--foreground)] hover:scale-105'
                 }
               `}
             >

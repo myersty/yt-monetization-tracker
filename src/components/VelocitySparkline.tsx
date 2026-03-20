@@ -117,10 +117,10 @@ export default function VelocityCard({ daily, availableMetrics }: VelocityCardPr
               key={metric}
               onClick={() => setActiveTab(metric)}
               className={`
-                px-3 py-1 text-xs font-medium rounded-full transition-all duration-200
+                px-3 py-1 text-xs font-medium rounded-full transition-all duration-200 cursor-pointer active:scale-95
                 ${activeTab === metric
                   ? 'bg-[var(--foreground)] text-[var(--background)]'
-                  : 'text-[var(--gray-600)] hover:text-[var(--foreground)]'
+                  : 'text-[var(--gray-600)] hover:text-[var(--foreground)] hover:scale-105'
                 }
               `}
             >

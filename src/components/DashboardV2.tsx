@@ -31,6 +31,8 @@ export default function DashboardV2({ data, onReset, isOAuthDashboard = false }:
           { top: '60%', right: '8%', delay: '1s' },
           { top: '80%', left: '20%', delay: '3s' },
           { top: '15%', right: '30%', delay: '5s' },
+          { top: '35%', left: '25%', delay: '6s' },
+          { top: '70%', right: '22%', delay: '7s' },
         ].map((pos, i) => (
           <div key={i} className="v2-dot" style={{ ...pos, animationDelay: pos.delay }} />
         ))}

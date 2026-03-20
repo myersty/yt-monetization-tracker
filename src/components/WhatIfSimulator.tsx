@@ -123,7 +123,7 @@ export default function WhatIfSimulator({
             setAvgViewsPerVideo(actualViews);
             setUserHasAdjusted(false);
           }}
-          className="text-xs text-[var(--gray-500)] hover:text-[var(--gold)] transition-colors flex items-center gap-1"
+          className="text-xs text-[var(--gray-500)] hover:text-[var(--gold)] transition-all flex items-center gap-1 cursor-pointer hover:scale-105 active:scale-95"
           title="Reset sliders to defaults"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
