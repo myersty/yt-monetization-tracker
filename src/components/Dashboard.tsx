@@ -52,7 +52,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
   const hasViewData = data.daily.some(d => d.views !== undefined);
 
   return (
-    <div className="min-h-screen bg-[var(--gray-50)] relative">
+    <div className="min-h-screen bg-[var(--background)] relative">
       {/* Ambient background effects */}
       <div className="ambient-glow-1" />
       <div className="ambient-glow-2" />
