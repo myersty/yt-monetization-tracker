@@ -23,8 +23,18 @@ export function generateMockData(): ParsedData {
   const startDate = new Date(endDate);
   startDate.setDate(startDate.getDate() - totalDays + 1);
 
+  // Target last-90-day stats:
+  // - 116 net subs gained
+  // - 4,812 views
+  // - Watch hours derived: ~4812 views * 7.2 min avg * 0.32 retention / 60 = ~185 hrs
+  // That's ~2.05 hrs/day, ~53.5 views/day, ~1.29 subs/day over 90 days
+
   const daily: DailyMetrics[] = [];
   let cumulativeSubs = 0;
+  const last90Start = totalDays - 90;
+
+  // Pre-calculate: we want ~435 total subs at end, ~116 in last 90 days
+  // So ~319 subs accumulated in first 822 days (~0.39/day avg for older period)
 
   for (let i = 0; i < totalDays; i++) {
     const currentDate = new Date(startDate);
@@ -36,48 +46,40 @@ export function generateMockData(): ParsedData {
     let watchHours: number;
     let views: number;
 
-    // Viral spike around day 650 (~21 months in)
-    if (i === 650) {
-      subsGained = 25 + Math.floor(rand() * 10);
-      subsLost = Math.floor(rand() * 2);
-      watchHours = 30 + rand() * 15;
-      views = 2800 + Math.floor(rand() * 1200);
-    } else if (i === 651) {
-      // Aftershock day
-      subsGained = 10 + Math.floor(rand() * 5);
-      subsLost = Math.floor(rand() * 2);
-      watchHours = 15 + rand() * 8;
-      views = 1400 + Math.floor(rand() * 600);
-    } else if (i === 652) {
-      // Settling day
-      subsGained = 5 + Math.floor(rand() * 3);
-      subsLost = Math.floor(rand() * 2);
-      watchHours = 8 + rand() * 5;
-      views = 600 + Math.floor(rand() * 300);
+    if (i >= last90Start) {
+      // Last 90 days: calibrated to hit targets
+      // Target: 116 subs / 90 days = ~1.29/day, 4812 views / 90 = ~53.5/day
+      // Watch hours: ~2.2/day to get ~200 hrs over 90 days
+      // ~1.3 subs/day target (116 over 90 days)
+      const subRoll = rand();
+      subsGained = subRoll < 0.46 ? 2 : subRoll < 0.86 ? 1 : 0;
+      subsLost = rand() < 0.03 ? 1 : 0;
+      watchHours = 1.7 + rand() * 1.3; // 1.7–3.0 hrs/day
+      views = 43 + Math.floor(rand() * 34); // 43–77 views/day
     } else if (i < 180) {
-      // Phase 1: First 6 months — very slow, just starting out
-      subsGained = rand() < 0.3 ? 1 : 0;
+      // Phase 1: First 6 months — just starting out
+      subsGained = rand() < 0.25 ? 1 : 0;
       subsLost = rand() < 0.1 ? 1 : 0;
-      watchHours = 0.3 + rand() * 0.6; // 0.3–0.9 hrs/day
-      views = 10 + Math.floor(rand() * 25); // 10–35 views/day
+      watchHours = 0.2 + rand() * 0.4; // 0.2–0.6 hrs/day
+      views = 8 + Math.floor(rand() * 18); // 8–26 views/day
     } else if (i < 450) {
-      // Phase 2: Months 7–15 — slight improvement, finding a rhythm
-      subsGained = rand() < 0.45 ? 1 : 0;
+      // Phase 2: Months 7–15 — finding a rhythm
+      subsGained = rand() < 0.35 ? 1 : 0;
+      subsLost = rand() < 0.08 ? 1 : 0;
+      watchHours = 0.4 + rand() * 0.6; // 0.4–1.0 hrs/day
+      views = 15 + Math.floor(rand() * 25); // 15–40 views/day
+    } else if (i < 650) {
+      // Phase 3: Months 16–21 — getting a bit better
+      subsGained = rand() < 0.45 ? 1 : (rand() < 0.1 ? 2 : 0);
       subsLost = rand() < 0.08 ? 1 : 0;
       watchHours = 0.6 + rand() * 0.8; // 0.6–1.4 hrs/day
-      views = 25 + Math.floor(rand() * 40); // 25–65 views/day
-    } else if (i < 650) {
-      // Phase 3: Months 16–21 — getting a bit better, some consistency
+      views = 22 + Math.floor(rand() * 35); // 22–57 views/day
+    } else {
+      // Phase 4: Months 22–27 — modest improvement before last 90 days
       subsGained = rand() < 0.5 ? 1 : (rand() < 0.15 ? 2 : 0);
       subsLost = rand() < 0.08 ? 1 : 0;
-      watchHours = 1.0 + rand() * 1.2; // 1.0–2.2 hrs/day
-      views = 40 + Math.floor(rand() * 55); // 40–95 views/day
-    } else {
-      // Phase 4: Months 22–30 — post-spike, slightly elevated baseline
-      subsGained = rand() < 0.55 ? 1 : (rand() < 0.2 ? 2 : 0);
-      subsLost = rand() < 0.1 ? 1 : 0;
-      watchHours = 1.2 + rand() * 1.5; // 1.2–2.7 hrs/day
-      views = 50 + Math.floor(rand() * 65); // 50–115 views/day
+      watchHours = 0.8 + rand() * 1.0; // 0.8–1.8 hrs/day
+      views = 28 + Math.floor(rand() * 40); // 28–68 views/day
     }
 
     // Weekend dips
@@ -101,14 +103,13 @@ export function generateMockData(): ParsedData {
 
   // Compute totals
   const currentSubscribers = cumulativeSubs;
-  const totalWatchTimeHours = daily.reduce((sum, d) => sum + (d.watchTimeHours || 0), 0);
   const totalViews = daily.reduce((sum, d) => sum + (d.views || 0), 0);
 
   // Rolling 365-day watch hours (only last year counts for YPP)
   const last365 = daily.slice(-365);
   const watchTimeHoursLast365Days = last365.reduce((sum, d) => sum + (d.watchTimeHours || 0), 0);
 
-  const longFormRatio = 0.88; // ~88% long-form
+  const longFormRatio = 0.90; // ~90% long-form
   const longFormHours = Math.round(watchTimeHoursLast365Days * longFormRatio);
   const shortsHours = Math.round(watchTimeHoursLast365Days * (1 - longFormRatio));
 
@@ -132,8 +133,8 @@ export function generateMockData(): ParsedData {
     },
     channelName: 'TechTalk with Alex',
     channelThumbnail: '',
-    videosLast90Days: 7,
-    postingCadenceDays: 12,
+    videosLast90Days: 13,
+    postingCadenceDays: 7,
     avgVideoDurationMinutes: 7.2,
     avgViewsPerVideo: 420,
     averageViewPercentage: 32,
