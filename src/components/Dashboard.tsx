@@ -35,6 +35,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
 
   // What-If defaults to current pace so both lines overlap until sliders are moved
   const [whatIfRates, setWhatIfRates] = useState<WhatIfRates>(null);
+  const [whatIfAdjusted, setWhatIfAdjusted] = useState(false);
   const effectiveWhatIfRates = whatIfRates ?? {
     dailyNewSubs: currentSubsPerDay,
     dailyWatchHours: currentHoursPerDay,
@@ -126,6 +127,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
             currentSubscribers={data.totals.currentSubscribers}
             totalWatchHours={data.totals.totalWatchTimeHours}
             daily={data.daily}
+            whatIfRates={whatIfAdjusted ? effectiveWhatIfRates : undefined}
           />
           <VelocityCard
             daily={data.daily}
@@ -159,6 +161,7 @@ export default function Dashboard({ data, onReset, isOAuthDashboard = false }: D
             avgViewsPerVideo={data.avgViewsPerVideo}
             averageViewPercentage={data.averageViewPercentage}
             onRatesChange={setWhatIfRates}
+            onAdjustedChange={setWhatIfAdjusted}
           />
         </div>
 

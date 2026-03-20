@@ -13,6 +13,7 @@ type WhatIfSimulatorProps = {
   avgViewsPerVideo?: number;
   averageViewPercentage?: number;
   onRatesChange?: (rates: WhatIfRates) => void;
+  onAdjustedChange?: (adjusted: boolean) => void;
 };
 
 export default function WhatIfSimulator({
@@ -25,6 +26,7 @@ export default function WhatIfSimulator({
   avgViewsPerVideo: actualAvgViews,
   averageViewPercentage,
   onRatesChange,
+  onAdjustedChange,
 }: WhatIfSimulatorProps) {
   const actualCadence = postingCadenceDays ?? 7;
   const actualDuration = avgVideoDurationMinutes ?? 10;
@@ -87,7 +89,6 @@ export default function WhatIfSimulator({
   }, [daysBetweenPosts, avgVideoMinutes, avgViewsPerVideo, retentionRate, currentSubscribers, totalWatchHours]);
 
   // Report rates to parent for timeline integration
-  // Before user touches sliders, use actual current pace so What-If overlaps with Current Pace
   useEffect(() => {
     if (onRatesChange) {
       if (userHasAdjusted) {
@@ -103,6 +104,11 @@ export default function WhatIfSimulator({
       }
     }
   }, [projection.dailyNewSubs, projection.dailyWatchHours, onRatesChange, userHasAdjusted, currentSubsPerDay, currentHoursPerDay]);
+
+  // Report adjusted state to parent
+  useEffect(() => {
+    onAdjustedChange?.(userHasAdjusted);
+  }, [onAdjustedChange, userHasAdjusted]);
 
   return (
     <div className="card p-6">
@@ -225,35 +231,6 @@ export default function WhatIfSimulator({
           </p>
         </div>
       )}
-
-      {/* Result */}
-      <div className="mt-6 pt-5 border-t border-[var(--gray-200)]">
-        {projection.daysToMonetization !== null && projection.daysToMonetization > 0 ? (
-          <div className="text-center">
-            <p className="text-sm text-[var(--gray-600)] mb-1">With this schedule, you&apos;d hit monetization by</p>
-            <p className="text-heading-gradient text-3xl font-bold font-[family-name:var(--font-display)]">
-              {projection.estimatedDate?.toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric',
-              })}
-            </p>
-            <p className="text-accent-gradient font-semibold text-lg mt-1">
-              ~{projection.daysToMonetization} days
-            </p>
-            <div className="flex justify-center gap-6 mt-3 text-xs text-[var(--gray-500)]">
-              <span>~{Math.round(projection.weeklyNewSubs)} subs/week</span>
-              <span>~{projection.weeklyWatchHours.toFixed(1)} hrs/week</span>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center">
-            <p className="text-lg font-bold font-[family-name:var(--font-display)] text-[#2E7D32]">
-              You&apos;re already there!
-            </p>
-          </div>
-        )}
-      </div>
     </div>
   );
 }

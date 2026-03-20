@@ -2,11 +2,17 @@
 
 import { Projection, DailyMetrics } from '@/lib/types';
 
+type WhatIfRates = {
+  dailyNewSubs: number;
+  dailyWatchHours: number;
+};
+
 type CountdownCardProps = {
   projections: Projection[];
   currentSubscribers?: number;
   totalWatchHours?: number;
   daily?: DailyMetrics[];
+  whatIfRates?: WhatIfRates;
 };
 
 function formatDate(date: Date | null): string {
@@ -27,10 +33,8 @@ function getStageEmoji(progressPercent: number): { emoji: string; size: string }
   return { emoji: '🌱', size: 'text-2xl' };
 }
 
-export default function CountdownCard({ projections, currentSubscribers = 0, totalWatchHours = 0, daily = [] }: CountdownCardProps) {
+export default function CountdownCard({ projections, currentSubscribers = 0, totalWatchHours = 0, daily = [], whatIfRates }: CountdownCardProps) {
   const current = projections.find(p => p.model === 'current');
-
-  const primaryDate = current?.monetizationDate ?? null;
 
   const alreadyMonetizable =
     current?.subscriberProjection.alreadyAchieved &&
@@ -42,18 +46,42 @@ export default function CountdownCard({ projections, currentSubscribers = 0, tot
   const overallProgress = (subProgress + hoursProgress) / 2;
   const stage = getStageEmoji(alreadyMonetizable ? 100 : overallProgress);
 
-  // Compute weeks to monetization from last 90 days pace
-  const last90 = daily.slice(-90);
-  const numWeeks = Math.max(last90.length / 7, 1);
-  const avgSubsPerWeek = last90.reduce((s, d) => s + ((d.subscribersGained || 0) - Math.abs(d.subscribersLost || 0)), 0) / numWeeks;
-  const avgHoursPerWeek = last90.reduce((s, d) => s + (d.watchTimeHours || 0), 0) / numWeeks;
   const subsNeeded = Math.max(1000 - currentSubscribers, 0);
   const hoursNeeded = Math.max(4000 - totalWatchHours, 0);
-  const weeksForSubs = avgSubsPerWeek > 0 ? Math.ceil(subsNeeded / avgSubsPerWeek) : null;
-  const weeksForHours = avgHoursPerWeek > 0 ? Math.ceil(hoursNeeded / avgHoursPerWeek) : null;
-  const weeksToTarget = weeksForSubs !== null && weeksForHours !== null
-    ? Math.max(weeksForSubs, weeksForHours)
-    : weeksForSubs ?? weeksForHours;
+
+  // When What-If sliders are adjusted, compute from those rates
+  // Otherwise compute from last 90 days pace
+  let weeksToTarget: number | null = null;
+  let estimatedDate: Date | null = null;
+  const isWhatIf = !!whatIfRates;
+
+  if (whatIfRates) {
+    const daysForSubs = whatIfRates.dailyNewSubs > 0 ? Math.ceil(subsNeeded / whatIfRates.dailyNewSubs) : null;
+    const daysForHours = whatIfRates.dailyWatchHours > 0 ? Math.ceil(hoursNeeded / whatIfRates.dailyWatchHours) : null;
+    let daysToTarget: number | null = null;
+    if (daysForSubs !== null && daysForHours !== null) {
+      daysToTarget = Math.max(daysForSubs, daysForHours);
+    } else {
+      daysToTarget = daysForSubs ?? daysForHours;
+    }
+    if (daysToTarget !== null && daysToTarget > 0) {
+      weeksToTarget = Math.ceil(daysToTarget / 7);
+      estimatedDate = new Date(Date.now() + daysToTarget * 24 * 60 * 60 * 1000);
+    }
+  } else {
+    // Default: use last 90 days pace
+    const last90 = daily.slice(-90);
+    const numWeeks = Math.max(last90.length / 7, 1);
+    const avgSubsPerWeek = last90.reduce((s, d) => s + ((d.subscribersGained || 0) - Math.abs(d.subscribersLost || 0)), 0) / numWeeks;
+    const avgHoursPerWeek = last90.reduce((s, d) => s + (d.watchTimeHours || 0), 0) / numWeeks;
+    const weeksForSubs = avgSubsPerWeek > 0 ? Math.ceil(subsNeeded / avgSubsPerWeek) : null;
+    const weeksForHours = avgHoursPerWeek > 0 ? Math.ceil(hoursNeeded / avgHoursPerWeek) : null;
+    weeksToTarget = weeksForSubs !== null && weeksForHours !== null
+      ? Math.max(weeksForSubs, weeksForHours)
+      : weeksForSubs ?? weeksForHours;
+    // Use projections model date for default view
+    estimatedDate = current?.monetizationDate ?? null;
+  }
 
   return (
     <div className="card ring-base ring-br p-6 min-h-[320px] flex flex-col">
@@ -80,21 +108,27 @@ export default function CountdownCard({ projections, currentSubscribers = 0, tot
           <div className="text-center py-4">
             <span className={`${stage.size} leading-none`}>{stage.emoji}</span>
             <p className="text-heading-gradient text-3xl sm:text-4xl font-bold font-[family-name:var(--font-display)] mt-2">
-              {formatDate(primaryDate || null)}
+              {formatDate(estimatedDate)}
             </p>
             {weeksToTarget !== null && weeksToTarget > 0 && (
               <p className="text-accent-gradient font-semibold text-xl mt-2">
-                ~{weeksToTarget} weeks at your current pace
+                ~{weeksToTarget} weeks {isWhatIf ? 'with this schedule' : 'at your current pace'}
               </p>
             )}
           </div>
           <div className="mt-auto pt-4 border-t border-white/6">
             <p className="text-[var(--gray-500)] text-[11px] leading-relaxed">
-              Calculated from your posting cadence, average views, and watch time retention.{' '}
-              <a href="#recommendations" className="text-accent-gradient font-medium hover:underline">
-                See your Channel Insights
-              </a>{' '}
-              for tips to shorten your timeline.
+              {isWhatIf ? (
+                <>Adjust the What-If sliders below to explore different scenarios.</>
+              ) : (
+                <>
+                  Calculated from your posting cadence, average views, and watch time retention.{' '}
+                  <a href="#recommendations" className="text-accent-gradient font-medium hover:underline">
+                    See your Channel Insights
+                  </a>{' '}
+                  for tips to shorten your timeline.
+                </>
+              )}
             </p>
           </div>
         </>
